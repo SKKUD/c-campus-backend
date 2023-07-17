@@ -31,7 +31,9 @@ public class Message extends BaseTimeEntity {
 
     private String author;
 
-    private LocalDateTime openedAt; // isOpened 대용
+    private Boolean isOpened;
+
+    private LocalDateTime openedAt;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "photo_id")
