@@ -13,6 +13,7 @@ public class Quiz {
     @Column(length = 20)
     private String content;
 
+    @Column(length=7)
     private String answer;
 
     private Boolean isSolved;
