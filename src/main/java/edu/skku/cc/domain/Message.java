@@ -1,10 +1,17 @@
 package edu.skku.cc.domain;
 
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Message extends BaseTimeEntity {
 
     @Id
@@ -24,9 +31,13 @@ public class Message extends BaseTimeEntity {
 
     private String author;
 
-    private LocalDateTime openedAt; // isOpened 대용
+    private Boolean isOpened;
 
-    private String imageUrl;
+    private LocalDateTime openedAt;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "photo_id")
+    private Photo photo;
 
     private String backgroundColorCode;
 

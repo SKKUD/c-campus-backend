@@ -27,6 +27,9 @@ public class User extends BaseTimeEntity {
     @OneToMany(mappedBy = "user")
     private List<Message> messages;
 
+    @OneToMany(mappedBy = "user")
+    private List<Photo> photos;
+
     public Integer getMessageCount() {
         return messages.size();
     }

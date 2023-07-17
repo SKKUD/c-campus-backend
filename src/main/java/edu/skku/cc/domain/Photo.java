@@ -10,18 +10,14 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class Quiz {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class Photo {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(mappedBy = "quiz")
-    private Message message;
+    private String imageUrl;
 
-    @Column(length = 20)
-    private String content;
-
-    @Column(length=7)
-    private String answer;
-
-    private Boolean isSolved;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
 }
