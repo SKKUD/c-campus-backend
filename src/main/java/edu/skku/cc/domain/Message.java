@@ -33,7 +33,9 @@ public class Message extends BaseTimeEntity {
 
     private LocalDateTime openedAt; // isOpened 대용
 
-    private String imageUrl;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "photo_id")
+    private Photo photo;
 
     private String backgroundColorCode;
 
