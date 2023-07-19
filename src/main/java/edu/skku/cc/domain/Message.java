@@ -1,10 +1,7 @@
 package edu.skku.cc.domain;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +9,7 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 public class Message extends BaseTimeEntity {
 
     @Id
@@ -31,9 +29,11 @@ public class Message extends BaseTimeEntity {
 
     private String author;
 
-    private Boolean isOpened;
+    private Boolean isOpened; // 수신자가 열람했는지 여부
 
-    private LocalDateTime openedAt;
+    private Boolean isPulled; // 뽑혔는지 여부
+
+    private LocalDateTime pulledAt; // 뽑힌 날짜, 시간
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "photo_id")
@@ -41,8 +41,12 @@ public class Message extends BaseTimeEntity {
 
     private String backgroundColorCode;
 
-    private Boolean isPublic;
+    private Boolean isPublic; // 공개 여부
 
     @OneToOne @JoinColumn(name = "quiz_id")
     private Quiz quiz;
+
+    public void updateIsPublic() {
+        this.isPublic = !this.isPublic;
+    }
 }
