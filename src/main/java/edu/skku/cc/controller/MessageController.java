@@ -6,7 +6,6 @@ import edu.skku.cc.dto.Message.MessagePublicUpdateResponseDto;
 import edu.skku.cc.dto.Message.SingleMessageResponseDto;
 import edu.skku.cc.exception.SuccessType;
 import edu.skku.cc.service.MessageService;
-import edu.skku.cc.domain.Quiz;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,6 +32,16 @@ public class MessageController {
     public ApiResponse<MessagePublicUpdateResponseDto> updateMessagePublic(@PathVariable Long userId, @PathVariable Long messageId) {
         messageService.updateMessagePublic(userId, messageId);
         return ApiResponse.success(SuccessType.UPDATE_USER_MESSAGE_PUBLIC_SUCCESS, messageService.updateMessagePublic(userId, messageId));
+    }
+
+    @GetMapping("/users/{userId}/message/remain-count")
+    public ApiResponse<Long> getRemainMessageCount(@PathVariable Long userId) {
+        return ApiResponse.success(SuccessType.GET_USER_REMAIN_MESSAGE_COUNT_SUCCESS, messageService.getRemainMessageCount(userId));
+    }
+
+    @GetMapping("/users/{userId}/messages/unpulled")
+    public ApiResponse<Integer> getUserUnpulledMessageList(@PathVariable Long userId) {
+        return ApiResponse.success(SuccessType.PULL_USER_MESSAGE_SUCCESS, messageService.pullMessage(userId));
     }
 
 }

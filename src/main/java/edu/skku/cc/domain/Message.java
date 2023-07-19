@@ -49,4 +49,9 @@ public class Message extends BaseTimeEntity {
     public void updateIsPublic() {
         this.isPublic = !this.isPublic;
     }
+
+    public void pullMessage() {
+        this.isPulled = true;
+        this.pulledAt = LocalDateTime.now();
+    }
 }

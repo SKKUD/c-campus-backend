@@ -16,6 +16,7 @@ public enum SuccessType {
     GET_USER_MESSAGE_ONE_SUCCESS(HttpStatus.OK,"메시지 조회에 성공했습니다."),
     UPDATE_USER_MESSAGE_PUBLIC_SUCCESS(HttpStatus.OK,"메시지 공개 여부 변경에 성공했습니다."),
     PULL_USER_MESSAGE_SUCCESS(HttpStatus.OK,"메시지 뽑기에 성공했습니다."),
+    GET_USER_REMAIN_MESSAGE_COUNT_SUCCESS(HttpStatus.OK, "뽑히지 않은 메시지 개수 조회에 성공했습니다"),
     SOLVE_MESSAGE_QUIZ_SUCCESS(HttpStatus.OK,"메시지 퀴즈 풀기에 성공했습니다."),
     GET_USER_IMAGE_ALL_SUCCESS(HttpStatus.OK,"유저 이미지 전체 조회에 성공했습니다."),
 
