@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@Embeddable
 public class Quiz {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
