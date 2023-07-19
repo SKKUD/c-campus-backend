@@ -26,19 +26,25 @@ public class MessageService {
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
 
+    /**
+     * Get all messages that user pulled
+     * Order by pulledAt DESC
+     */
     public List<MessageListResponseDto> getUserPulledMessageList(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
-        List<Message> messageList = messageRepository.findPulledByUserIdOrderByPulledAtDECS(userId);
+        List<Message> messageList = user.getMessages();
 
         return messageList.stream()
-//                .filter(message -> Objects.equals(message.getUser().getId(), userId))
+                .filter(Message::getIsPulled)
+                .sorted((m1, m2) -> m2.getPulledAt().compareTo(m1.getPulledAt()))
                 .map(MessageListResponseDto::of)
                 .collect(Collectors.toList());
     }
 
     public SingleMessageResponseDto getSingleUserMessage(Long userId, Long messageId) {
 //        User user = userRepository.getUserById(userId);
+        // 수신인이면 open 여부 체크하기
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
         return SingleMessageResponseDto.of(message);
@@ -46,6 +52,7 @@ public class MessageService {
 
     @Transactional
     public MessagePublicUpdateResponseDto updateMessagePublic(Long userId, Long messageId) {
+        // 메시지 수신인인지 체크
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
         message.updateIsPublic();
@@ -54,6 +61,4 @@ public class MessageService {
                 .isPublic(message.getIsPublic())
                 .build();
     }
-
-
 }

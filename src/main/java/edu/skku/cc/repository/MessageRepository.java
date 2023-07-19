@@ -8,6 +8,4 @@ import java.util.List;
 
 public interface MessageRepository extends JpaRepository<Message, Long> {
 
-    @Query("SELECT m FROM Message m WHERE m.id = :id AND m.isPulled = TRUE ORDER BY m.pulledAt DESC")
-    List<Message> findPulledByUserIdOrderByPulledAtDECS(Long id);
 }
