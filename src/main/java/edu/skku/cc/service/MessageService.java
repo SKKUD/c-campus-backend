@@ -61,4 +61,46 @@ public class MessageService {
                 .isPublic(message.getIsPublic())
                 .build();
     }
+
+    /**
+     * User 메시지 중 pull 되지 않은 것 몇 개인지 체크
+     */
+    public Long getRemainMessageCount(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
+        List<Message> messageList = user.getMessages();
+        return messageList.stream()
+                .filter(message -> !message.getIsPulled())
+                .count();
+    }
+
+    /**
+     * User 메시지 중 pull 되지 않은 것 5개 단위로 pull
+     */
+    @Transactional
+    public Integer pullMessage(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
+        List<Message> messageList = user.getMessages();
+
+        // 5개 미만인 경우
+        if (messageList.stream().filter(message -> !message.getIsPulled()).count() < 5) {
+            throw new CustomException(ErrorType.INVALID_PULL_REQUEST_EXCEPTION);
+        } else { // 5개 이상인 경우 5개 단위로 pull
+            List<Message> unpulledMessageList = messageList.stream()
+                    .filter(message -> !message.getIsPulled())
+                    .sorted((m1, m2) -> m1.getCreatedAt().compareTo(m2.getCreatedAt()))
+                    .toList();
+
+            int len = unpulledMessageList.size();
+            int pullCount = len / 5;
+
+            for (int i = 0; i < pullCount; i++) {
+                for (int j = 0; j < 5; j++) {
+                    unpulledMessageList.get(i * 5 + j).pullMessage();
+                }
+            }
+            return pullCount * 5;
+        }
+    }
 }

@@ -16,13 +16,10 @@ public enum ErrorType {
     INVALID_PULL_REQUEST_EXCEPTION(HttpStatus.BAD_REQUEST, "뽑지 않은 쪽지가 5개 미만입니다"),
 
 
-
     /**
      * 401 UNAUTHORIZED
      */
     // INVALID_USER(HttpStatus.UNAUTHORIZED, "접근 권한이 없는 유저입니다."),
-
-
 
 
     /**
