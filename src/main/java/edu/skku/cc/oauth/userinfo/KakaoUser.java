@@ -2,9 +2,9 @@ package edu.skku.cc.oauth.userinfo;
 
 import java.util.Map;
 
-public class KakaoUserInfo extends OAuth2UserInfo{
+public class KakaoUser extends OAuth2UserInfo{
 
-    public KakaoUserInfo(Map<String, Object> attributes) {
+    public KakaoUser(Map<String, Object> attributes) {
         super(attributes);
     }
 

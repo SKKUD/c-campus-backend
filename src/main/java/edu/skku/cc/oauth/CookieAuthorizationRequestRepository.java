@@ -2,6 +2,7 @@ package edu.skku.cc.oauth;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -11,9 +12,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.SerializationUtils;
 
 import java.util.Base64;
+import java.util.Optional;
 
 @Component
-public class CookieAuthorizationRequestRepository implements AuthorizationRequestRepository {
+public class CookieAuthorizationRequestRepository implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
     public static final String OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME = "oauth2_auth_request";
     public static final String REDIRECT_URI_PARAM_COOKIE_NAME = "redirect_uri";
@@ -21,34 +23,32 @@ public class CookieAuthorizationRequestRepository implements AuthorizationReques
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if (cookie.getName().equals(OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME)) {
-                    String serializedAuthorizationRequest = cookie.getName();
-                    return deserialize(serializedAuthorizationRequest);
-                }
-            }
-        }
-        return null;
+        System.out.println("HI");
+        Optional<Cookie> cookie = getCookie(request, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME);
+        return cookie
+                .map(c -> deserialize(c.getName()))
+                .orElse(null);
     }
 
     @Override
     public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("BYE");
+        System.out.println(authorizationRequest.getAuthorizationRequestUri());
         if (authorizationRequest == null) {
             deleteCookie(response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME);
             deleteCookie(response, REDIRECT_URI_PARAM_COOKIE_NAME);
             return;
         }
-        addCookie(response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME, authorizationRequest);
+        addCookie(response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME, serialize(authorizationRequest), COOKIE_EXPIRE_SECONDS);
         String redirectUri = request.getParameter(REDIRECT_URI_PARAM_COOKIE_NAME);
-
-        if (!redirectUri.isBlank())
-            addCookie(response, REDIRECT_URI_PARAM_COOKIE_NAME, redirectUri);
+        if (StringUtils.isNotBlank(redirectUri)) {
+            addCookie(response, REDIRECT_URI_PARAM_COOKIE_NAME, redirectUri, COOKIE_EXPIRE_SECONDS);
+        }
     }
 
     @Override
     public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request, HttpServletResponse response) {
+        System.out.println("WHAT");
         return this.loadAuthorizationRequest(request);
     }
 
@@ -66,14 +66,29 @@ public class CookieAuthorizationRequestRepository implements AuthorizationReques
         }
     }
 
-    private void addCookie(HttpServletResponse response, String name, Object object) {
-        Cookie cookie = new Cookie(name, serialize(object));
-        cookie.setMaxAge(COOKIE_EXPIRE_SECONDS);
+    private Optional<Cookie> getCookie(HttpServletRequest request, String cookieName) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null && cookies.length > 0) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals(cookieName)) {
+                    return Optional.of(cookie);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
+        Cookie cookie = new Cookie(name, value);
+        System.out.println(cookie.getName());
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(maxAge);
         response.addCookie(cookie);
     }
 
     private void deleteCookie(HttpServletResponse response, String name) {
         Cookie cookie = new Cookie(name, null);
+        cookie.setValue("");
         cookie.setMaxAge(0);
         cookie.setPath("/");
         response.addCookie(cookie);
