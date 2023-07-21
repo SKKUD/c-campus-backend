@@ -1,7 +1,9 @@
 package edu.skku.cc.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.skku.cc.repository.UserRepository;
 import edu.skku.cc.service.dto.KakaoUserInfoDto;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -12,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -20,7 +23,11 @@ import java.util.Map;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
+@Transactional
 public class KakaoAuthService {
+
+    private final UserRepository userRepository;
 
     @Value("${spring.security.oauth2.client.provider.kakao.user-info-uri}")
     private String USER_INFO_URL;
@@ -65,7 +72,10 @@ public class KakaoAuthService {
             String accessToken = String.valueOf(jsonObject.get("access_token"));
             String refreshToken = String.valueOf(jsonObject.get("refresh_token"));
 
-            return getKakaoUserInfoByToken(accessToken);
+            KakaoUserInfoDto kakaoUserInfoDto = getKakaoUserInfoByToken(accessToken);
+            String nickname = kakaoUserInfoDto.getNickname();
+            String email = kakaoUserInfoDto.getEmail();
+            userRepository.
     }
 
     private KakaoUserInfoDto getKakaoUserInfoByToken (String accessToken) throws Exception {
