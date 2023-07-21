@@ -1,6 +1,7 @@
 package edu.skku.cc.controller;
 
 import edu.skku.cc.service.KakaoAuthService;
+import edu.skku.cc.service.dto.KakaoUserInfoDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -20,8 +21,8 @@ public class KakaoAuthController {
     private final KakaoAuthService kakaoAuthService;
 
     @GetMapping("/oauth2/callback/kakao")
-    public @ResponseBody String kakaoCallback(String code) {
-        kakaoAuthService.getKakaoUserInfo(code);
-        return "ok";
+    public @ResponseBody ResponseEntity<KakaoUserInfoDto> kakaoCallback(String code) throws Exception {
+        KakaoUserInfoDto kakaoUserInfo = kakaoAuthService.getKakaoUserInfo(code);
+        return ResponseEntity.ok().body(kakaoUserInfo);
     }
 }

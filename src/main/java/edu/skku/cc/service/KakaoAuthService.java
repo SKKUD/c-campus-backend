@@ -1,6 +1,7 @@
 package edu.skku.cc.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.skku.cc.service.dto.KakaoUserInfoDto;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -34,8 +35,7 @@ public class KakaoAuthService {
     private String CONTENT_TYPE = "application/x-www-form-urlencoded;charset=utf-8";
     private String GRANT_TYPE = "authorization_code";
 
-    public void getKakaoUserInfo(String code) {
-        try {
+    public KakaoUserInfoDto getKakaoUserInfo(String code) throws Exception {
             HttpHeaders headers = new HttpHeaders();
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
@@ -62,21 +62,13 @@ public class KakaoAuthService {
 
             JSONParser jsonParser = new JSONParser();
             JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
-            String accessToken = (String) jsonObject.get("access_token");
-            String refreshToken = (String) jsonObject.get("refresh_token");
+            String accessToken = String.valueOf(jsonObject.get("access_token"));
+            String refreshToken = String.valueOf(jsonObject.get("refresh_token"));
 
-            log.info("accessToken {}", accessToken);
-            log.info("refreshToken {}", refreshToken);
-
-            getKakaoUserInfoByToken(accessToken);
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
+            return getKakaoUserInfoByToken(accessToken);
     }
 
-    private void getKakaoUserInfoByToken (String accessToken) {
-        try {
+    private KakaoUserInfoDto getKakaoUserInfoByToken (String accessToken) throws Exception {
             HttpHeaders headers = new HttpHeaders();
             headers.add("Authorization", "Bearer " + accessToken);
             headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
@@ -87,9 +79,13 @@ public class KakaoAuthService {
 
             JSONParser jsonParser = new JSONParser();
             JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
-            System.out.println(jsonObject.toJSONString());
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+            log.info("jsonObject {}", jsonObject);
+            JSONObject account = (JSONObject) jsonObject.get("kakao_account");
+            JSONObject profile = (JSONObject) account.get("profile");
+
+            String nickname = String.valueOf(profile.get("nickname"));
+            String email = String.valueOf(account.get("email"));
+
+            return new KakaoUserInfoDto(nickname, email);
     }
 }
