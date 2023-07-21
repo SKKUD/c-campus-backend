@@ -30,10 +30,10 @@ public class CookieAuthorizationRequestRepository implements AuthorizationReques
                 .orElse(null);
     }
 
+
     @Override
     public void saveAuthorizationRequest(OAuth2AuthorizationRequest authorizationRequest, HttpServletRequest request, HttpServletResponse response) {
-        System.out.println("BYE");
-        System.out.println(authorizationRequest.getAuthorizationRequestUri());
+        System.out.println("HEY");
         if (authorizationRequest == null) {
             deleteCookie(response, OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME);
             deleteCookie(response, REDIRECT_URI_PARAM_COOKIE_NAME);
@@ -44,12 +44,14 @@ public class CookieAuthorizationRequestRepository implements AuthorizationReques
         if (StringUtils.isNotBlank(redirectUri)) {
             addCookie(response, REDIRECT_URI_PARAM_COOKIE_NAME, redirectUri, COOKIE_EXPIRE_SECONDS);
         }
-    }
+    } // save -> remove //response 또는 redirect 문제
 
     @Override
     public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request, HttpServletResponse response) {
-        System.out.println("WHAT");
-        return this.loadAuthorizationRequest(request);
+        System.out.println("BYE");
+        System.out.println(request.getCookies().length);
+        System.out.println(getCookie(request, "oauth2_auth_request"));
+        return loadAuthorizationRequest(request);
     }
 
     private static String serialize(Object object) {

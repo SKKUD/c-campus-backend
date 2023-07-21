@@ -2,6 +2,8 @@ package edu.skku.cc.security;
 
 import edu.skku.cc.oauth.CookieAuthorizationRequestRepository;
 import edu.skku.cc.oauth.CustomOAuth2UserService;
+import edu.skku.cc.oauth.OAuth2AuthenticationFailureHandler;
+import edu.skku.cc.oauth.OAuth2AuthenticationSuccessHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -24,17 +26,15 @@ public class OAuth2Config {
 
     private final CookieAuthorizationRequestRepository cookieAuthorizationRequestRepository;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+    private final OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
-    public OAuth2Config(CookieAuthorizationRequestRepository cookieAuthorizationRequestRepository, CustomOAuth2UserService customOAuth2UserService) {
+    public OAuth2Config(CookieAuthorizationRequestRepository cookieAuthorizationRequestRepository, CustomOAuth2UserService customOAuth2UserService, OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler, OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler) {
         this.cookieAuthorizationRequestRepository = cookieAuthorizationRequestRepository;
         this.customOAuth2UserService = customOAuth2UserService;
+        this.oAuth2AuthenticationSuccessHandler = oAuth2AuthenticationSuccessHandler;
+        this.oAuth2AuthenticationFailureHandler = oAuth2AuthenticationFailureHandler;
     }
-
-    @Bean
-    public HttpFirewall defaultHttpFirewall() {
-        return new DefaultHttpFirewall();
-    }
-
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -47,13 +47,13 @@ public class OAuth2Config {
                                 .anyRequest().permitAll()
                         )
                 .oauth2Login(oauth2 -> oauth2
-                        .authorizationEndpoint(endPoint -> endPoint
-                                .baseUri("/oauth2/authorize")
-                                .authorizationRequestRepository(cookieAuthorizationRequestRepository)
-                        )
-                        .redirectionEndpoint(endPoint -> endPoint
-                                .baseUri("/oauth2/callback/*")
-                        )
+//                        .authorizationEndpoint(endPoint -> endPoint
+//                                .baseUri("/oauth2/authorize")
+//                                .authorizationRequestRepository(cookieAuthorizationRequestRepository)
+//                        )
+//                        .redirectionEndpoint(endPoint -> endPoint
+//                                .baseUri("/oauth2/callback/*")
+//                        )
                         .userInfoEndpoint(endPoint -> endPoint
                                 .userService(customOAuth2UserService)
                         )
