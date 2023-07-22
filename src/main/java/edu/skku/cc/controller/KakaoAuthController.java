@@ -22,6 +22,7 @@ public class KakaoAuthController {
 
     @GetMapping("/oauth2/callback/kakao")
     public @ResponseBody ResponseEntity<KakaoUserInfoDto> kakaoCallback(String code) throws Exception {
+        System.out.println("WHAT");
         KakaoUserInfoDto kakaoUserInfo = kakaoAuthService.getKakaoUserInfo(code);
         return ResponseEntity.ok().body(kakaoUserInfo);
     }

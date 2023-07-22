@@ -1,14 +1,14 @@
 package edu.skku.cc.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.skku.cc.domain.User;
+import edu.skku.cc.jwt.JwtTokenUtil;
+import edu.skku.cc.redis.RedisUtil;
 import edu.skku.cc.repository.UserRepository;
 import edu.skku.cc.service.dto.KakaoUserInfoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -20,7 +20,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -29,6 +29,8 @@ import java.util.Map;
 public class KakaoAuthService {
 
     private final UserRepository userRepository;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final RedisUtil redisUtil;
 
     @Value("${spring.security.oauth2.client.provider.kakao.user-info-uri}")
     private String USER_INFO_URL;
@@ -44,6 +46,7 @@ public class KakaoAuthService {
     private String GRANT_TYPE = "authorization_code";
 
     public KakaoUserInfoDto getKakaoUserInfo(String code) throws Exception {
+            log.info("d {}", "haha");
             HttpHeaders headers = new HttpHeaders();
             MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
 
@@ -75,7 +78,13 @@ public class KakaoAuthService {
 
             KakaoUserInfoDto kakaoUserInfoDto = getKakaoUserInfoByToken(accessToken);
             User user = kakaoUserInfoDto.toEntity();
-            userRepository.save(user);
+            User findUser = userRepository.findByEmail(user.getEmail());
+            if (findUser == null) {
+                System.out.println("Saving user...");
+                userRepository.save(user);
+            }
+            else
+                signin(findUser);
             return kakaoUserInfoDto;
     }
 
@@ -98,5 +107,13 @@ public class KakaoAuthService {
             String email = String.valueOf(account.get("email"));
 
             return new KakaoUserInfoDto(nickname, email);
+    }
+
+    private void signin(User user) {
+        log.info("user {}", user.getEmail());
+        String key = user.getEmail();
+        String accessToken = jwtTokenUtil.createAccessToken(user.getEmail());
+        String refreshToken = jwtTokenUtil.createRefreshToken(user.getEmail());
+        redisUtil.saveRefreshToken(key, refreshToken, jwtTokenUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
     }
 }
