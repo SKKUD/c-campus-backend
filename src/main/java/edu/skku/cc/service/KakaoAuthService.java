@@ -1,6 +1,7 @@
 package edu.skku.cc.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import edu.skku.cc.domain.User;
 import edu.skku.cc.repository.UserRepository;
 import edu.skku.cc.service.dto.KakaoUserInfoDto;
 import lombok.RequiredArgsConstructor;
@@ -73,9 +74,9 @@ public class KakaoAuthService {
             String refreshToken = String.valueOf(jsonObject.get("refresh_token"));
 
             KakaoUserInfoDto kakaoUserInfoDto = getKakaoUserInfoByToken(accessToken);
-            String nickname = kakaoUserInfoDto.getNickname();
-            String email = kakaoUserInfoDto.getEmail();
-            userRepository.
+            User user = kakaoUserInfoDto.toEntity();
+            userRepository.save(user);
+            return kakaoUserInfoDto;
     }
 
     private KakaoUserInfoDto getKakaoUserInfoByToken (String accessToken) throws Exception {
