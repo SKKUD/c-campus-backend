@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
@@ -15,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.firewall.DefaultHttpFirewall;
 import org.springframework.security.web.firewall.HttpFirewall;
 
@@ -50,6 +52,8 @@ public class OAuth2Config {
                                 .disable())
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
+                                .requestMatchers("/users/{userId}/messages/{messageId}").permitAll()
+                                .requestMatchers("/users/{userId}/messages/{messageId}/quiz").permitAll()
                                 .anyRequest().permitAll()
                 )
                 .sessionManagement(session ->
@@ -60,7 +64,7 @@ public class OAuth2Config {
                         logout
                                 .disable()
                 );
-//                .addFilterBefore()
+//                .addFilterBefore(JwtFilter, BasicAuthenticationFilter.class);
 //                .oauth2Login(oauth2 -> oauth2
 //                        .authorizationEndpoint(endPoint -> endPoint
 //                                .baseUri("/oauth2/authorize")

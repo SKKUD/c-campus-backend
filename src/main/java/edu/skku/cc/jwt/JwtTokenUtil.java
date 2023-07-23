@@ -24,10 +24,6 @@ public class JwtTokenUtil {
         return createToken(email, ACCESS_TOKEN_EXPIRATION_TIME);
     }
 
-    public long getRefreshTokenExpireTime() {
-        return REFRESH_TOKEN_EXPIRE_TIME;
-    }
-
     public String createRefreshToken(String email) {
         return createToken(email, REFRESH_TOKEN_EXPIRE_TIME);
     }
@@ -42,5 +38,9 @@ public class JwtTokenUtil {
                 .setExpiration(new Date(System.currentTimeMillis() + expireTime))    // JWT 토큰 만료 시간
                 .signWith(new SecretKeySpec(SECRET_KEY.getBytes(), SignatureAlgorithm.HS512.getJcaName()))   // HS512 알고리즘을 사용하여 secretKey를 이용해 서명
                 .compact(); // JWT 토큰 생성
+    }
+
+    public long getRefreshTokenExpireTime() {
+        return REFRESH_TOKEN_EXPIRE_TIME;
     }
 }

@@ -51,6 +51,18 @@ public class KakaoAuthService {
         return jwtDto;
     }
 
+    public ResponseEntity<String> kakaoLogout() {
+        String logoutRedirectUrl = "http://localhost:8080";
+        String kakaoLogouttUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + CLIENT_ID + "&logout_redirect_uri=" + logoutRedirectUrl;
+        RestTemplate rt = new RestTemplate();
+        ResponseEntity<String> responseEntity = rt.getForEntity(kakaoLogouttUrl, String.class);
+        return responseEntity;
+        // redis에서 리프레쉬 토큰 꺼내옴
+        // 카카오 액세스 토큰으로..
+        // https://kapi.kakao.com/v1/user/access_token_info 로 토큰 정보 요청
+        // 	https://kapi.kakao.com/v1/user/logout 로 얻은 토큰을 갖고 요청
+    }
+
     private String kakaoAuthenticate(String code) throws Exception {
         String contentType = "application/x-www-form-urlencoded;charset=utf-8";
         String grantType = "authorization_code";

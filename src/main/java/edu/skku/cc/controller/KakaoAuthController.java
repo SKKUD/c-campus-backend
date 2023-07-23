@@ -12,6 +12,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
@@ -25,5 +26,9 @@ public class KakaoAuthController {
     public @ResponseBody ResponseEntity<JwtDto> kakaoCallback(String code) throws Exception {
         JwtDto jwtDto = kakaoAuthService.kakaoLogin(code);
         return ResponseEntity.ok().body(jwtDto);
+    }
+    @GetMapping("/oauth/logout")
+    public @ResponseBody ResponseEntity kakaoLogout() {
+        return kakaoAuthService.kakaoLogout();
     }
 }
