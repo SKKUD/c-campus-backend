@@ -41,25 +41,25 @@ public class OAuth2Config {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-//                .httpBasic(hb ->
-//                        hb
-//                                .disable()
-//                )
+                .httpBasic(hb ->
+                        hb
+                                .disable()
+                )
                 .formLogin(login ->
                         login
                                 .disable())
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .anyRequest().permitAll()
+                )
+                .sessionManagement(session ->
+                        session
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .logout(logout ->
+                        logout
+                                .disable()
                 );
-//                .sessionManagement(session ->
-//                        session
-//                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                )
-//                .logout(logout ->
-//                        logout
-//                                .disable()
-//                );
 //                .addFilterBefore()
 //                .oauth2Login(oauth2 -> oauth2
 //                        .authorizationEndpoint(endPoint -> endPoint

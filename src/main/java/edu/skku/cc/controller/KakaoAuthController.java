@@ -1,5 +1,6 @@
 package edu.skku.cc.controller;
 
+import edu.skku.cc.jwt.dto.JwtDto;
 import edu.skku.cc.service.KakaoAuthService;
 import edu.skku.cc.service.dto.KakaoUserInfoDto;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +22,8 @@ public class KakaoAuthController {
     private final KakaoAuthService kakaoAuthService;
 
     @GetMapping("/oauth2/callback/kakao")
-    public @ResponseBody ResponseEntity<KakaoUserInfoDto> kakaoCallback(String code) throws Exception {
-        System.out.println("WHAT");
-        KakaoUserInfoDto kakaoUserInfo = kakaoAuthService.getKakaoUserInfo(code);
-        return ResponseEntity.ok().body(kakaoUserInfo);
+    public @ResponseBody ResponseEntity<JwtDto> kakaoCallback(String code) throws Exception {
+        JwtDto jwtDto = kakaoAuthService.kakaoLogin(code);
+        return ResponseEntity.ok().body(jwtDto);
     }
 }
