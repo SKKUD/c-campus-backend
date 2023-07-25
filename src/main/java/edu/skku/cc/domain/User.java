@@ -33,6 +33,11 @@ public class User extends BaseTimeEntity {
     public Integer getMessageCount() {
         return messages.size();
     }
+
+    public User (String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
 }
 
 
