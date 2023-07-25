@@ -130,10 +130,10 @@ public class KakaoAuthService {
     }
 
     private JwtDto getAccessTokenAndRefreshToken(User user) {
-        log.info("user {}", user.getEmail());
-        String key = user.getEmail();
-        String accessToken = jwtTokenUtil.createAccessToken(user.getEmail());
-        String refreshToken = jwtTokenUtil.createRefreshToken(user.getEmail());
+        log.info("user {}", user.getId());
+        String key = String.valueOf(user.getId());
+        String accessToken = jwtTokenUtil.createAccessToken(key);
+        String refreshToken = jwtTokenUtil.createRefreshToken();
         redisUtil.saveRefreshToken(key, refreshToken, jwtTokenUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
         return new JwtDto(accessToken, refreshToken);
     }
