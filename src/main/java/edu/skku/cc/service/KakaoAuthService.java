@@ -123,9 +123,15 @@ public class KakaoAuthService {
 
     private User synchronizeUser(KakaoUserInfoDto kakaoUserInfoDto) {
         User user = kakaoUserInfoDto.toEntity();
+        log.info("user.getId() {}", user.getId());
+        log.info("user.getName() {}", user.getName());
+        log.info("user.getEmail() {}", user.getEmail());
         User findUser = userRepository.findByEmail(user.getEmail());
-        if (findUser == null)
+        if (findUser == null) {
+            log.info("findUser {}", findUser);
             userRepository.save(user);
+            return user;
+        }
         return findUser;
     }
 
