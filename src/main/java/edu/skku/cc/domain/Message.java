@@ -46,6 +46,10 @@ public class Message extends BaseTimeEntity {
     @OneToOne @JoinColumn(name = "quiz_id")
     private Quiz quiz;
 
+    public String getImageUrl() {
+        return this.photo != null ? this.photo.getImageUrl() : null;
+    }
+
     public void updateIsPublic() {
         this.isPublic = !this.isPublic;
     }
