@@ -3,12 +3,12 @@ package edu.skku.cc.controller;
 import edu.skku.cc.dto.ApiResponse;
 import edu.skku.cc.dto.Message.MessageListResponseDto;
 import edu.skku.cc.dto.Message.MessagePublicUpdateResponseDto;
+import edu.skku.cc.dto.Message.MessageSolveQuizRequestDto;
 import edu.skku.cc.dto.Message.SingleMessageResponseDto;
 import edu.skku.cc.exception.SuccessType;
 import edu.skku.cc.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.util.List;
 
@@ -44,5 +44,10 @@ public class MessageController {
         return ApiResponse.success(SuccessType.PULL_USER_MESSAGE_SUCCESS, messageService.pullMessage(userId));
     }
 
+    @PostMapping("/users/{userId}/messages/{messageId}/quiz")
+    public ApiResponse solveQuiz(@PathVariable Long userId, @PathVariable Long messageId, @RequestBody MessageSolveQuizRequestDto request) {
+        messageService.solveMessageQuiz(userId, messageId, request.getAnswer());
+        return ApiResponse.success(SuccessType.SOLVE_MESSAGE_QUIZ_SUCCESS);
+    }
 }
 

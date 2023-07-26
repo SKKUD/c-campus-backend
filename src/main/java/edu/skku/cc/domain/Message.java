@@ -54,4 +54,8 @@ public class Message extends BaseTimeEntity {
         this.isPulled = true;
         this.pulledAt = LocalDateTime.now();
     }
+
+    public void solveQuiz() {
+        this.quiz.solve();
+    }
 }

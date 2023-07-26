@@ -25,4 +25,8 @@ public class Quiz {
     private String answer;
 
     private Boolean isSolved;
+
+    public void solve() {
+        this.isSolved = true;
+    }
 }
