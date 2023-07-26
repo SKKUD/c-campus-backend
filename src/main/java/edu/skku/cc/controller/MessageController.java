@@ -49,5 +49,11 @@ public class MessageController {
         messageService.solveMessageQuiz(userId, messageId, request.getAnswer());
         return ApiResponse.success(SuccessType.SOLVE_MESSAGE_QUIZ_SUCCESS);
     }
+
+    @DeleteMapping("/users/{userId}/messages/{messageId}")
+    public ApiResponse deleteMessage(@PathVariable Long userId, @PathVariable Long messageId) {
+        messageService.deleteMessage(userId, messageId);
+        return ApiResponse.success(SuccessType.DELETE_MESSAGE_SUCCESS);
+    }
 }
 
