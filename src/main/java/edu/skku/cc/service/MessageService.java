@@ -122,5 +122,13 @@ public class MessageService {
         }
     }
 
+    public Long deleteMessage(Long userId, Long messageId) {
+        // 권한 체크
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
+        messageRepository.delete(message);
+        return messageId;
+    }
+
 
 }
