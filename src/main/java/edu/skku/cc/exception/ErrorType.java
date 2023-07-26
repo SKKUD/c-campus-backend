@@ -14,7 +14,8 @@ public enum ErrorType {
      */
     REQUEST_VALIDATION_EXCEPTION(HttpStatus.BAD_REQUEST, "잘못된 요청입니다"),
     INVALID_PULL_REQUEST_EXCEPTION(HttpStatus.BAD_REQUEST, "뽑지 않은 쪽지가 5개 미만입니다"),
-
+    INVALID_SOLVE_REQUEST_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 풀린 퀴즈입니다"),
+    WRONG_ANSWER_EXCEPTION(HttpStatus.BAD_REQUEST, "퀴즈 정답이 아닙니다"),
 
     /**
      * 401 UNAUTHORIZED

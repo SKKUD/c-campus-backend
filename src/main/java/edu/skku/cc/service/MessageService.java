@@ -1,6 +1,7 @@
 package edu.skku.cc.service;
 
 import edu.skku.cc.domain.Message;
+import edu.skku.cc.domain.Quiz;
 import edu.skku.cc.domain.User;
 import edu.skku.cc.dto.Message.MessageListResponseDto;
 import edu.skku.cc.dto.Message.MessagePublicUpdateResponseDto;
@@ -103,4 +104,23 @@ public class MessageService {
             return pullCount * 5;
         }
     }
+
+    public void solveMessageQuiz(Long userId, Long messageId, String answer) {
+
+        // 메시지 수신인인지 체크
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
+        Quiz messageQuiz = message.getQuiz();
+        if (messageQuiz.getIsSolved()) {
+            throw new CustomException(ErrorType.INVALID_SOLVE_REQUEST_EXCEPTION);
+        }
+        if (messageQuiz.getAnswer().equals(answer)) {
+            // 이게 맞는지 아니면 messageQuiz.solveQuiz()로 해야하는지 모르겠음
+            message.solveQuiz();
+        } else {
+            throw new CustomException(ErrorType.WRONG_ANSWER_EXCEPTION);
+        }
+    }
+
+
 }
