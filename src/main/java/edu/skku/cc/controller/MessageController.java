@@ -16,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageController {
 
-    private MessageService messageService;
+    private final MessageService messageService;
 
     @GetMapping("/users/{userId}/messages/pulled")
     public ApiResponse<List<MessageListResponseDto>> getUserPulledMessageList(@PathVariable Long userId) {

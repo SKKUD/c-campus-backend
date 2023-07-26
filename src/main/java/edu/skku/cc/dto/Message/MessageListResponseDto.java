@@ -39,7 +39,8 @@ public class MessageListResponseDto {
                 .isOpened(message.getIsOpened())
                 .isPulled(message.getIsPulled())
                 .pulledAt(message.getPulledAt())
-                .imageUrl(message.getPhoto().getImageUrl())
+                // Check if photo is null before calling getImageUrl
+                .imageUrl(message.getImageUrl())
                 .backgroundColorCode(message.getBackgroundColorCode())
                 .isPublic(message.getIsPublic())
                 .quiz(message.getQuiz())
