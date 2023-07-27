@@ -16,6 +16,7 @@ public enum ErrorType {
     INVALID_PULL_REQUEST_EXCEPTION(HttpStatus.BAD_REQUEST, "뽑지 않은 쪽지가 5개 미만입니다"),
     INVALID_SOLVE_REQUEST_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 풀린 퀴즈입니다"),
     WRONG_ANSWER_EXCEPTION(HttpStatus.BAD_REQUEST, "퀴즈 정답이 아닙니다"),
+    INVALID_FILE_TYPE_EXCEPTION(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다"),
 
     /**
      * 401 UNAUTHORIZED
@@ -28,8 +29,6 @@ public enum ErrorType {
      */
     INVALID_USER(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."),
     INVALID_MESSAGE(HttpStatus.NOT_FOUND, "존재하지 않는 메시지입니다.");
-
-
 
 
     private final HttpStatus httpStatus;
