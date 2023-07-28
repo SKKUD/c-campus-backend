@@ -28,7 +28,14 @@ public enum ErrorType {
      * 404 NOT FOUND
      */
     INVALID_USER(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."),
-    INVALID_MESSAGE(HttpStatus.NOT_FOUND, "존재하지 않는 메시지입니다.");
+    INVALID_MESSAGE(HttpStatus.NOT_FOUND, "존재하지 않는 메시지입니다."),
+
+
+    /*
+     * 500 INTERNAL SERVER ERROR
+     */
+
+    FILE_UPLOAD_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다");
 
 
     private final HttpStatus httpStatus;

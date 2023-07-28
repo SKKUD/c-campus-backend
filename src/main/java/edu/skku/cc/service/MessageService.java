@@ -15,10 +15,15 @@ import edu.skku.cc.repository.QuizRepository;
 import edu.skku.cc.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -33,6 +38,11 @@ public class MessageService {
     private final UserRepository userRepository;
     private final QuizRepository quizRepository;
     private final PhotoRepository photoRepository;
+
+    private final S3Client s3Client;
+
+    @Value("${aws.s3.bucket}")
+    private String BUCKET_NAME;
 
     /**
      * Get all messages that user pulled
@@ -166,7 +176,19 @@ public class MessageService {
 
         if (!file.isEmpty()) {
             UUID uuid = UUID.randomUUID(); // UUID for s3 file name
-            // TODO: upload image to S3 & get url
+
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(BUCKET_NAME)
+                    .key(uuid.toString())
+                    .contentType(file.getContentType())
+                    .build();
+
+            try {
+                s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
+            } catch (IOException e) {
+                throw new CustomException(ErrorType.FILE_UPLOAD_EXCEPTION);
+            }
+
             Photo photo = message.setPhoto(uuid);
             photoRepository.save(photo);
         }
@@ -177,6 +199,8 @@ public class MessageService {
         }
 
         messageRepository.save(message);
+
+        // TODO: DB 오류 발생시 S3에 저장된 파일 삭제
 
         return message.getId();
     }
