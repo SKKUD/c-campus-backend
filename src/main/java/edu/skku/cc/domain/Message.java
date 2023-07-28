@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -19,8 +20,6 @@ public class Message extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-
-    private String title;
 
     private String category;
 
@@ -43,11 +42,12 @@ public class Message extends BaseTimeEntity {
 
     private Boolean isPublic; // 공개 여부
 
-    @OneToOne @JoinColumn(name = "quiz_id")
+    @OneToOne
+    @JoinColumn(name = "quiz_id")
     private Quiz quiz;
 
-    public String getImageUrl() {
-        return this.photo != null ? this.photo.getImageUrl() : null;
+    public UUID getImageUuid() {
+        return this.photo != null ? this.photo.getImageUuid() : null;
     }
 
     public void updateIsPublic() {
@@ -57,6 +57,25 @@ public class Message extends BaseTimeEntity {
     public void pullMessage() {
         this.isPulled = true;
         this.pulledAt = LocalDateTime.now();
+    }
+
+    public Quiz setQuiz(String content, String answer) {
+        this.quiz = Quiz.builder()
+                .message(this)
+                .content(content)
+                .answer(answer)
+                .isSolved(false)
+                .build();
+        return this.quiz;
+    }
+
+    public Photo setPhoto(UUID imageUuid) {
+        this.photo = Photo.builder()
+                .imageUuid(imageUuid)
+                .isMyPhoto(false)
+                .user(this.user)
+                .build();
+        return this.photo;
     }
 
     public void solveQuiz() {
