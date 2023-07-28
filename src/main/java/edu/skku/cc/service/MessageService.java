@@ -1,21 +1,26 @@
 package edu.skku.cc.service;
 
 import edu.skku.cc.domain.Message;
+import edu.skku.cc.domain.Photo;
 import edu.skku.cc.domain.Quiz;
 import edu.skku.cc.domain.User;
-import edu.skku.cc.dto.Message.MessageListResponseDto;
+import edu.skku.cc.dto.Message.CreateMessageRequestDto;
 import edu.skku.cc.dto.Message.MessagePublicUpdateResponseDto;
-import edu.skku.cc.dto.Message.SingleMessageResponseDto;
+import edu.skku.cc.dto.Message.MessageResponseDto;
 import edu.skku.cc.exception.CustomException;
 import edu.skku.cc.exception.ErrorType;
 import edu.skku.cc.repository.MessageRepository;
+import edu.skku.cc.repository.PhotoRepository;
+import edu.skku.cc.repository.QuizRepository;
 import edu.skku.cc.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,12 +31,14 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final QuizRepository quizRepository;
+    private final PhotoRepository photoRepository;
 
     /**
      * Get all messages that user pulled
      * Order by pulledAt DESC
      */
-    public List<MessageListResponseDto> getUserPulledMessageList(Long userId) {
+    public List<MessageResponseDto> getUserPulledMessageList(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
         List<Message> messageList = user.getMessages();
@@ -39,16 +46,16 @@ public class MessageService {
         return messageList.stream()
                 .filter(Message::getIsPulled)
                 .sorted((m1, m2) -> m2.getPulledAt().compareTo(m1.getPulledAt()))
-                .map(MessageListResponseDto::of)
+                .map(MessageResponseDto::of)
                 .collect(Collectors.toList());
     }
 
-    public SingleMessageResponseDto getSingleUserMessage(Long userId, Long messageId) {
+    public MessageResponseDto getSingleUserMessage(Long userId, Long messageId) {
 //        User user = userRepository.getUserById(userId);
         // 수신인이면 open 여부 체크하기
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
-        return SingleMessageResponseDto.of(message);
+        return MessageResponseDto.of(message);
     }
 
     @Transactional
@@ -122,6 +129,7 @@ public class MessageService {
         }
     }
 
+    @Transactional
     public Long deleteMessage(Long userId, Long messageId) {
         // 권한 체크
         Message message = messageRepository.findById(messageId)
@@ -131,4 +139,45 @@ public class MessageService {
     }
 
 
+    @Transactional
+    public Long createMessage(Long userId, CreateMessageRequestDto request, MultipartFile file) {
+        log.info("userId: {}", userId);
+        log.info("request: {}", request.toString());
+        log.info("file: {}, type: {}", file.getOriginalFilename(), file.getContentType());
+
+
+        if (file.getContentType() != null && !file.getContentType().startsWith("image")) {
+            throw new CustomException(ErrorType.INVALID_FILE_TYPE_EXCEPTION);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
+
+        Message message = Message.builder()
+                .user(user)
+                .category(request.getCategory())
+                .content(request.getContent())
+                .author(request.getAuthor())
+                .backgroundColorCode(request.getBackgroundColorCode())
+                .isOpened(false)
+                .isPulled(false)
+                .isPublic(false)
+                .build();
+
+        if (!file.isEmpty()) {
+            UUID uuid = UUID.randomUUID(); // UUID for s3 file name
+            // TODO: upload image to S3 & get url
+            Photo photo = message.setPhoto(uuid);
+            photoRepository.save(photo);
+        }
+
+        if (request.getIsQuiz()) {
+            Quiz quiz = message.setQuiz(request.getQuizContent(), request.getQuizAnswer());
+            quizRepository.save(quiz);
+        }
+
+        messageRepository.save(message);
+
+        return message.getId();
+    }
 }
