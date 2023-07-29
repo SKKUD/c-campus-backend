@@ -81,4 +81,8 @@ public class Message extends BaseTimeEntity {
     public void solveQuiz() {
         this.quiz.solve();
     }
+
+    public void openMessage() {
+        this.isOpened = true;
+    }
 }
