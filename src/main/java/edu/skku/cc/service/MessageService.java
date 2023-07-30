@@ -51,7 +51,7 @@ public class MessageService {
 
         return messageList.stream()
                 .filter(Message::getIsPulled)
-                .sorted((m1, m2) -> m2.getPulledAt().compareTo(m1.getPulledAt()))
+                .sorted(Comparator.comparing(Message::getPulledAt).reversed())
                 .map(MessageResponseDto::of)
                 .collect(Collectors.toList());
     }
@@ -63,7 +63,7 @@ public class MessageService {
 
         return messageList.stream()
                 .filter(message -> message.getIsPulled() && message.getIsPublic())
-                .sorted((m1, m2) -> m2.getPulledAt().compareTo(m1.getPulledAt()))
+                .sorted(Comparator.comparing(Message::getPulledAt).reversed())
                 .map(MessageResponseDto::of)
                 .collect(Collectors.toList());
     }
