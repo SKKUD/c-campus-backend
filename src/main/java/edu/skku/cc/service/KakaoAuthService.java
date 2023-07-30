@@ -1,11 +1,11 @@
 package edu.skku.cc.service;
 
 import edu.skku.cc.domain.User;
+import edu.skku.cc.dto.auth.KakaoUserInfoDto;
 import edu.skku.cc.dto.jwt.JwtDto;
 import edu.skku.cc.jwt.JwtTokenUtil;
 import edu.skku.cc.redis.RedisUtil;
 import edu.skku.cc.repository.UserRepository;
-import edu.skku.cc.service.dto.KakaoUserInfoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;

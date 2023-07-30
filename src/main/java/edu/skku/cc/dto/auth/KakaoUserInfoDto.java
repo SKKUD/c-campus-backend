@@ -1,4 +1,4 @@
-package edu.skku.cc.service.dto;
+package edu.skku.cc.dto.auth;
 
 import edu.skku.cc.domain.User;
 import lombok.AllArgsConstructor;
