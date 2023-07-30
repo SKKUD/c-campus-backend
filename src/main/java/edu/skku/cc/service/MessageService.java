@@ -1,9 +1,6 @@
 package edu.skku.cc.service;
 
-import edu.skku.cc.domain.Message;
-import edu.skku.cc.domain.Photo;
-import edu.skku.cc.domain.Quiz;
-import edu.skku.cc.domain.User;
+import edu.skku.cc.domain.*;
 import edu.skku.cc.dto.Message.CreateMessageRequestDto;
 import edu.skku.cc.dto.Message.MessagePublicUpdateResponseDto;
 import edu.skku.cc.dto.Message.MessageResponseDto;
@@ -23,7 +20,9 @@ import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -127,7 +126,7 @@ public class MessageService {
         } else { // 5개 이상인 경우 5개 단위로 pull
             List<Message> unpulledMessageList = messageList.stream()
                     .filter(message -> !message.getIsPulled())
-                    .sorted((m1, m2) -> m1.getCreatedAt().compareTo(m2.getCreatedAt()))
+                    .sorted(Comparator.comparing(BaseTimeEntity::getCreatedAt))
                     .toList();
 
             int len = unpulledMessageList.size();
@@ -162,7 +161,7 @@ public class MessageService {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
 
-        if (message.getUser().getId() != userId) {
+        if (!Objects.equals(message.getUser().getId(), userId)) {
             throw new CustomException(ErrorType.INVALID_USER_EXCEPTION);
         }
 
