@@ -13,7 +13,8 @@ public class Quiz {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne(mappedBy = "quiz")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "message_id", referencedColumnName = "id", nullable = false)
     private Message message;
 
     @Column(length = 20)

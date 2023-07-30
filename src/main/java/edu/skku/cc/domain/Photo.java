@@ -17,9 +17,11 @@ public class Photo {
 
     private UUID imageUuid; // S3 filename
 
-    private Boolean isMyPhoto;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "message_id", nullable = true) // 내가 올린 사진인 경우 null
+    private Message message;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }

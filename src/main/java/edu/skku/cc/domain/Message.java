@@ -34,16 +34,14 @@ public class Message extends BaseTimeEntity {
 
     private LocalDateTime pulledAt; // 뽑힌 날짜, 시간
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "photo_id")
+    @OneToOne(mappedBy = "message", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Photo photo;
 
     private String backgroundColorCode;
 
     private Boolean isPublic; // 공개 여부
 
-    @OneToOne
-    @JoinColumn(name = "quiz_id")
+    @OneToOne(mappedBy = "message", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private Quiz quiz;
 
     public UUID getImageUuid() {
@@ -71,8 +69,8 @@ public class Message extends BaseTimeEntity {
 
     public Photo setPhoto(UUID imageUuid) {
         this.photo = Photo.builder()
+                .message(this)
                 .imageUuid(imageUuid)
-                .isMyPhoto(false)
                 .user(this.user)
                 .build();
         return this.photo;
