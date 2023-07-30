@@ -3,7 +3,6 @@ package edu.skku.cc.dto.message;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import edu.skku.cc.domain.Message;
-import edu.skku.cc.domain.Quiz;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -27,7 +26,11 @@ public class MessageResponseDto {
     private String backgroundColorCode;
     private Boolean isPublic;
 
-    private Quiz quiz;
+    private Boolean isQuiz;
+    private String quizContent;
+    private String quizAnswer;
+
+    private String imageUrl;
 
     public static MessageResponseDto of(Message message) {
         return MessageResponseDto.builder()
@@ -39,11 +42,16 @@ public class MessageResponseDto {
                 .isOpened(message.getIsOpened())
                 .isPulled(message.getIsPulled())
                 .pulledAt(message.getPulledAt())
-                // Check if photo is null before calling getImageUrl
                 .imageUuid(message.getImageUuid())
                 .backgroundColorCode(message.getBackgroundColorCode())
                 .isPublic(message.getIsPublic())
-                .quiz(message.getQuiz())
+                .isQuiz(message.getQuiz() != null)
+                .quizContent(message.getQuiz() != null ? message.getQuiz().getContent() : null)
+                .quizAnswer(message.getQuiz() != null ? message.getQuiz().getAnswer() : null)
                 .build();
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

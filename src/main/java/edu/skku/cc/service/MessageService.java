@@ -58,6 +58,9 @@ public class MessageService {
                 .filter(Message::getIsPulled)
                 .sorted(Comparator.comparing(Message::getPulledAt).reversed())
                 .map(MessageResponseDto::of)
+                .peek(dto -> {
+                    dto.setImageUrl(getUrl(dto.getImageUuid()));
+                })
                 .collect(Collectors.toList());
     }
 
@@ -70,6 +73,9 @@ public class MessageService {
                 .filter(message -> message.getIsPulled() && message.getIsPublic())
                 .sorted(Comparator.comparing(Message::getPulledAt).reversed())
                 .map(MessageResponseDto::of)
+                .peek(dto -> {
+                    dto.setImageUrl(getUrl(dto.getImageUuid()));
+                })
                 .collect(Collectors.toList());
     }
 
@@ -80,7 +86,10 @@ public class MessageService {
         if (!message.getIsOpened()) {
             message.openMessage();
         }
-        return MessageResponseDto.of(message);
+
+        MessageResponseDto dto = MessageResponseDto.of(message);
+        dto.setImageUrl(getUrl(dto.getImageUuid()));
+        return dto;
     }
 
     public MessageResponseDto getSingleUserPublicMessage(Long userId, Long messageId) {
@@ -90,7 +99,9 @@ public class MessageService {
         if (!message.getIsPublic()) {
             throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         }
-        return MessageResponseDto.of(message);
+        MessageResponseDto dto = MessageResponseDto.of(message);
+        dto.setImageUrl(getUrl(dto.getImageUuid()));
+        return dto;
     }
 
     @Transactional
@@ -185,11 +196,6 @@ public class MessageService {
 
     @Transactional
     public Long createMessage(Long userId, CreateMessageRequestDto request, MultipartFile file) {
-        log.info("userId: {}", userId);
-        log.info("request: {}", request.toString());
-        log.info("file: {}, type: {}", file.getOriginalFilename(), file.getContentType());
-
-
         if (file.getContentType() != null && !file.getContentType().startsWith("image")) {
             throw new CustomException(ErrorType.INVALID_FILE_TYPE_EXCEPTION);
         }
@@ -287,7 +293,7 @@ public class MessageService {
                 .bucket(BUCKET_NAME)
                 .key(uuid.toString())
                 .build());
-        
+
         photoRepository.delete(photo);
     }
 
@@ -302,6 +308,9 @@ public class MessageService {
     }
 
     private String getUrl(UUID uuid) {
-        return String.format("https://%s.s3.%s.amazonaws.com/%s", BUCKET_NAME, REGION, uuid.toString());
+        if (uuid == null) {
+            return null;
+        }
+        return String.format("https://%s.s3.%s.amazonaws.com/%s", BUCKET_NAME, REGION, uuid);
     }
 }
