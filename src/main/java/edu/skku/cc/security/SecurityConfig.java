@@ -24,31 +24,25 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
-                .httpBasic(hb ->
-                        hb
-                                .disable()
+                .httpBasic(AbstractHttpConfigurer::disable
                 )
-                .formLogin(login ->
-                        login
-                                .disable())
+                .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
+                                authorizeRequests
 //                                .requestMatchers("/users/{userId}/messages/{messageId}").authenticated()
 //                                .requestMatchers("/users/{userId}/messages/{messageId}/quiz").authenticated()
-                                .anyRequest().permitAll()
+                                        .anyRequest().permitAll()
                 )
                 .sessionManagement(session ->
                         session
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .logout(logout ->
-                        logout
-                                .disable()
+                .logout(AbstractHttpConfigurer::disable
                 )
                 .addFilterBefore(
                         jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class
                 );
 
-                return http.build();
+        return http.build();
     }
 }
