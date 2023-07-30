@@ -81,5 +81,25 @@ public class MessageController {
         messageService.deleteMessage(userId, messageId);
         return ApiResponse.success(SuccessType.DELETE_MESSAGE_SUCCESS);
     }
+
+    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
+    @GetMapping("/users/{userId}/photos")
+    public ApiResponse<List<String>> getUserPhotoList(@PathVariable Long userId) {
+        return ApiResponse.success(SuccessType.GET_USER_IMAGE_ALL_SUCCESS, messageService.getUserPhotoList(userId));
+    }
+
+    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
+    @PostMapping("/users/{userId}/photos")
+    public ApiResponse<String> uploadUserPhoto(@PathVariable Long userId, @RequestPart MultipartFile file) {
+        return ApiResponse.success(SuccessType.CREATE_USER_IMAGE_SUCCESS, messageService.uploadUserPhoto(userId, file));
+    }
+
+    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
+    @DeleteMapping("/users/{userId}/photos/{imageUuid}")
+    public ApiResponse deleteUserPhoto(@PathVariable Long userId, @PathVariable String imageUuid) {
+        messageService.deletePhoto(userId, imageUuid);
+        return ApiResponse.success(SuccessType.DELETE_IMAGE_SUCCESS);
+    }
+
 }
 

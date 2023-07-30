@@ -29,6 +29,7 @@ public enum ErrorType {
      */
     INVALID_USER_EXCEPTION(HttpStatus.NOT_FOUND, "존재하지 않는 유저입니다."),
     INVALID_MESSAGE_EXCEPTION(HttpStatus.NOT_FOUND, "존재하지 않는 메시지입니다."),
+    INVALID_IMAGE_EXCEPTION(HttpStatus.NOT_FOUND, "존재하지 않는 이미지입니다."),
 
 
     /*

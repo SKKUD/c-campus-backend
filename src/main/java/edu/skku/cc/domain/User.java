@@ -35,6 +35,11 @@ public class User extends BaseTimeEntity {
         this.email = email;
     }
 
+    public void addPhoto(Photo photo) {
+        photo.setUser(this);
+        photos.add(photo);
+    }
+
     public Integer getMessageCount() {
         return messages.size();
     }

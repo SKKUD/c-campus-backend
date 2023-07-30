@@ -7,6 +7,7 @@ import edu.skku.cc.dto.message.MessageResponseDto;
 import edu.skku.cc.exception.CustomException;
 import edu.skku.cc.exception.ErrorType;
 import edu.skku.cc.repository.MessageRepository;
+import edu.skku.cc.repository.PhotoRepository;
 import edu.skku.cc.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final PhotoRepository photoRepository;
 
     private final S3Client s3Client;
 
@@ -233,6 +235,70 @@ public class MessageService {
         // TODO: DB 오류 발생시 S3에 저장된 파일 삭제
 
         return message.getId();
+    }
+
+    @Transactional
+    public String uploadUserPhoto(Long userId, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
+
+        if (file.getContentType() != null && !file.getContentType().startsWith("image")) {
+            throw new CustomException(ErrorType.INVALID_FILE_TYPE_EXCEPTION);
+        }
+
+        UUID uuid = UUID.randomUUID(); // UUID for s3 file name
+
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(BUCKET_NAME)
+                .key(uuid.toString())
+                .contentType(file.getContentType())
+                .build();
+
+        try {
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
+        } catch (IOException e) {
+            throw new CustomException(ErrorType.FILE_UPLOAD_EXCEPTION);
+        }
+
+        Photo photo = Photo.builder()
+                .imageUuid(uuid)
+                .build();
+
+        user.addPhoto(photo);
+        userRepository.save(user);
+
+        return getUrl(uuid);
+    }
+
+    @Transactional
+    public void deletePhoto(Long userId, String imageUuid) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
+
+        Photo photo = photoRepository.findByImageUuid(UUID.fromString(imageUuid))
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_IMAGE_EXCEPTION));
+
+        if (!Objects.equals(photo.getUser().getId(), user.getId())) {
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
+        }
+
+        UUID uuid = photo.getImageUuid();
+        s3Client.deleteObject(DeleteObjectRequest.builder()
+                .bucket(BUCKET_NAME)
+                .key(uuid.toString())
+                .build());
+        
+        photoRepository.delete(photo);
+    }
+
+    public List<String> getUserPhotoList(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
+
+        List<Photo> photoList = user.getPhotos();
+        return photoList.stream()
+                .map(photo -> getUrl(photo.getImageUuid()))
+                .toList();
     }
 
     private String getUrl(UUID uuid) {
