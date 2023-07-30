@@ -14,7 +14,6 @@ import edu.skku.cc.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -74,7 +73,7 @@ public class MessageService {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
         // open 여부 체크
-        if(!message.getIsOpened()) {
+        if (!message.getIsOpened()) {
             message.openMessage();
         }
         return MessageResponseDto.of(message);
@@ -161,10 +160,10 @@ public class MessageService {
     @Transactional
     public void deleteMessage(Long userId, Long messageId) {
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
 
         if (message.getUser().getId() != userId) {
-            throw new CustomException(ErrorType.INVALID_USER);
+            throw new CustomException(ErrorType.INVALID_USER_EXCEPTION);
         }
 
         Photo photo = message.getPhoto();
