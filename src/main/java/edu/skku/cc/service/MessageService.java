@@ -234,4 +234,8 @@ public class MessageService {
 
         return message.getId();
     }
+
+    private String getUrl(UUID uuid) {
+        return String.format("https://%s.s3.%s.amazonaws.com/%s", BUCKET_NAME, REGION, uuid.toString());
+    }
 }
