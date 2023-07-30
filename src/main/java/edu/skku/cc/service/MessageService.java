@@ -10,8 +10,6 @@ import edu.skku.cc.dto.Message.MessageResponseDto;
 import edu.skku.cc.exception.CustomException;
 import edu.skku.cc.exception.ErrorType;
 import edu.skku.cc.repository.MessageRepository;
-import edu.skku.cc.repository.PhotoRepository;
-import edu.skku.cc.repository.QuizRepository;
 import edu.skku.cc.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
@@ -36,8 +35,6 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
-    private final QuizRepository quizRepository;
-    private final PhotoRepository photoRepository;
 
     private final S3Client s3Client;
 
@@ -140,12 +137,24 @@ public class MessageService {
     }
 
     @Transactional
-    public Long deleteMessage(Long userId, Long messageId) {
-        // 권한 체크
+    public void deleteMessage(Long userId, Long messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
+
+        if (message.getUser().getId() != userId) {
+            throw new CustomException(ErrorType.INVALID_USER);
+        }
+
+        Photo photo = message.getPhoto();
+        if (photo != null) {
+            UUID uuid = photo.getImageUuid();
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(BUCKET_NAME)
+                    .key(uuid.toString())
+                    .build());
+        }
+
         messageRepository.delete(message);
-        return messageId;
     }
 
 
@@ -189,13 +198,11 @@ public class MessageService {
                 throw new CustomException(ErrorType.FILE_UPLOAD_EXCEPTION);
             }
 
-            Photo photo = message.setPhoto(uuid);
-            photoRepository.save(photo);
+            message.setPhoto(uuid);
         }
 
         if (request.getIsQuiz()) {
-            Quiz quiz = message.setQuiz(request.getQuizContent(), request.getQuizAnswer());
-            quizRepository.save(quiz);
+            message.setQuiz(request.getQuizContent(), request.getQuizAnswer());
         }
 
         messageRepository.save(message);
