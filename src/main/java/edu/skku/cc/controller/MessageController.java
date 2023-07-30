@@ -23,14 +23,27 @@ public class MessageController {
     private final MessageService messageService;
 
     @GetMapping("/users/{userId}/messages/pulled")
-    public ApiResponse<List<MessageResponseDto>> getUserPulledMessageList(@PathVariable Long userId) {
-        return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ALL_SUCCESS, messageService.getUserPulledMessageList(userId));
+    public ApiResponse<List<MessageResponseDto>> getUserPulledMessageList(@PathVariable Long userId, Authentication authentication) {
+        if(authentication.getPrincipal().equals(userId)) {
+            // 수신자 본인 -> 본인의 모든 메시지 조회
+            return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ALL_SUCCESS, messageService.getUserPulledMessageList(userId));
+        }
+        else {
+            // 방문자 -> public 메시지만 조회
+            return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ALL_SUCCESS, messageService.getUserPublicPulledMessageList(userId));
+        }
     }
 
-    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @GetMapping("/users/{userId}/messages/{messageId}")
     public ApiResponse<MessageResponseDto> getSingleUserMessage(@PathVariable Long userId, @PathVariable Long messageId, Authentication authentication) {
-        return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ONE_SUCCESS, messageService.getSingleUserMessage(userId, messageId));
+        if(authentication.getPrincipal().equals(userId)) {
+            // 수신자
+            return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ONE_SUCCESS, messageService.getSingleUserMessage(userId, messageId));
+        }
+        else {
+            // 방문자
+            return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ONE_SUCCESS, messageService.getSingleUserPublicMessage(userId, messageId));
+        }
     }
 
     @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
@@ -40,6 +53,7 @@ public class MessageController {
         return ApiResponse.success(SuccessType.UPDATE_USER_MESSAGE_PUBLIC_SUCCESS, messageService.updateMessagePublic(userId, messageId));
     }
 
+    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @GetMapping("/users/{userId}/message/remain-count")
     public ApiResponse<Long> getRemainMessageCount(@PathVariable Long userId) {
         return ApiResponse.success(SuccessType.GET_USER_REMAIN_MESSAGE_COUNT_SUCCESS, messageService.getRemainMessageCount(userId));
@@ -56,12 +70,14 @@ public class MessageController {
         return ApiResponse.success(SuccessType.CREATE_MESSAGE_SUCCESS, messageService.createMessage(userId, request, file));
     }
 
+    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @PostMapping("/users/{userId}/messages/{messageId}/quiz")
     public ApiResponse solveQuiz(@PathVariable Long userId, @PathVariable Long messageId, @RequestBody @Valid MessageSolveQuizRequestDto request) {
         messageService.solveMessageQuiz(userId, messageId, request.getAnswer());
         return ApiResponse.success(SuccessType.SOLVE_MESSAGE_QUIZ_SUCCESS);
     }
 
+    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @DeleteMapping("/users/{userId}/messages/{messageId}")
     public ApiResponse deleteMessage(@PathVariable Long userId, @PathVariable Long messageId) {
         messageService.deleteMessage(userId, messageId);

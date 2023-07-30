@@ -14,6 +14,7 @@ import edu.skku.cc.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -47,7 +48,7 @@ public class MessageService {
      */
     public List<MessageResponseDto> getUserPulledMessageList(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
         List<Message> messageList = user.getMessages();
 
         return messageList.stream()
@@ -57,19 +58,42 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
 
+    public List<MessageResponseDto> getUserPublicPulledMessageList(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
+        List<Message> messageList = user.getMessages();
+
+        return messageList.stream()
+                .filter(message -> message.getIsPulled() && message.getIsPublic())
+                .sorted((m1, m2) -> m2.getPulledAt().compareTo(m1.getPulledAt()))
+                .map(MessageResponseDto::of)
+                .collect(Collectors.toList());
+    }
+
     public MessageResponseDto getSingleUserMessage(Long userId, Long messageId) {
-//        User user = userRepository.getUserById(userId);
-        // 수신인이면 open 여부 체크하기
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
+        // open 여부 체크
+        if(!message.getIsOpened()) {
+            message.openMessage();
+        }
+        return MessageResponseDto.of(message);
+    }
+
+    public MessageResponseDto getSingleUserPublicMessage(Long userId, Long messageId) {
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
+
+        if (!message.getIsPublic()) {
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
+        }
         return MessageResponseDto.of(message);
     }
 
     @Transactional
     public MessagePublicUpdateResponseDto updateMessagePublic(Long userId, Long messageId) {
-        // 메시지 수신인인지 체크
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
         message.updateIsPublic();
         return MessagePublicUpdateResponseDto.builder()
                 .messageId(message.getId())
@@ -82,7 +106,7 @@ public class MessageService {
      */
     public Long getRemainMessageCount(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
         List<Message> messageList = user.getMessages();
         return messageList.stream()
                 .filter(message -> !message.getIsPulled())
@@ -95,7 +119,7 @@ public class MessageService {
     @Transactional
     public Integer pullMessage(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
         List<Message> messageList = user.getMessages();
 
         // 5개 미만인 경우
@@ -120,10 +144,8 @@ public class MessageService {
     }
 
     public void solveMessageQuiz(Long userId, Long messageId, String answer) {
-
-        // 메시지 수신인인지 체크
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
         Quiz messageQuiz = message.getQuiz();
         if (messageQuiz.getIsSolved()) {
             throw new CustomException(ErrorType.INVALID_SOLVE_REQUEST_EXCEPTION);
@@ -170,7 +192,7 @@ public class MessageService {
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
 
         Message message = Message.builder()
                 .user(user)
