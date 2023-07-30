@@ -1,10 +1,10 @@
 package edu.skku.cc.controller;
 
 import edu.skku.cc.dto.ApiResponse;
-import edu.skku.cc.dto.Message.CreateMessageRequestDto;
-import edu.skku.cc.dto.Message.MessagePublicUpdateResponseDto;
-import edu.skku.cc.dto.Message.MessageResponseDto;
-import edu.skku.cc.dto.Message.MessageSolveQuizRequestDto;
+import edu.skku.cc.dto.message.CreateMessageRequestDto;
+import edu.skku.cc.dto.message.MessagePublicUpdateResponseDto;
+import edu.skku.cc.dto.message.MessageResponseDto;
+import edu.skku.cc.dto.message.MessageSolveQuizRequestDto;
 import edu.skku.cc.exception.SuccessType;
 import edu.skku.cc.service.MessageService;
 import jakarta.validation.Valid;
@@ -24,11 +24,10 @@ public class MessageController {
 
     @GetMapping("/users/{userId}/messages/pulled")
     public ApiResponse<List<MessageResponseDto>> getUserPulledMessageList(@PathVariable Long userId, Authentication authentication) {
-        if(authentication.getPrincipal().equals(userId)) {
+        if (authentication.getPrincipal().equals(userId)) {
             // 수신자 본인 -> 본인의 모든 메시지 조회
             return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ALL_SUCCESS, messageService.getUserPulledMessageList(userId));
-        }
-        else {
+        } else {
             // 방문자 -> public 메시지만 조회
             return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ALL_SUCCESS, messageService.getUserPublicPulledMessageList(userId));
         }
@@ -36,11 +35,10 @@ public class MessageController {
 
     @GetMapping("/users/{userId}/messages/{messageId}")
     public ApiResponse<MessageResponseDto> getSingleUserMessage(@PathVariable Long userId, @PathVariable Long messageId, Authentication authentication) {
-        if(authentication.getPrincipal().equals(userId)) {
+        if (authentication.getPrincipal().equals(userId)) {
             // 수신자
             return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ONE_SUCCESS, messageService.getSingleUserMessage(userId, messageId));
-        }
-        else {
+        } else {
             // 방문자
             return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ONE_SUCCESS, messageService.getSingleUserPublicMessage(userId, messageId));
         }

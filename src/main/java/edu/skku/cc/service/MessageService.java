@@ -1,9 +1,9 @@
 package edu.skku.cc.service;
 
 import edu.skku.cc.domain.*;
-import edu.skku.cc.dto.Message.CreateMessageRequestDto;
-import edu.skku.cc.dto.Message.MessagePublicUpdateResponseDto;
-import edu.skku.cc.dto.Message.MessageResponseDto;
+import edu.skku.cc.dto.message.CreateMessageRequestDto;
+import edu.skku.cc.dto.message.MessagePublicUpdateResponseDto;
+import edu.skku.cc.dto.message.MessageResponseDto;
 import edu.skku.cc.exception.CustomException;
 import edu.skku.cc.exception.ErrorType;
 import edu.skku.cc.repository.MessageRepository;
@@ -39,6 +39,9 @@ public class MessageService {
 
     @Value("${aws.s3.bucket}")
     private String BUCKET_NAME;
+
+    @Value("${aws.s3.region}")
+    private String REGION;
 
     /**
      * Get all messages that user pulled

@@ -1,4 +1,4 @@
-package edu.skku.cc.dto.Message;
+package edu.skku.cc.dto.message;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;

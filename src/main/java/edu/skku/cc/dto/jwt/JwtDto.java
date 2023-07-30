@@ -1,4 +1,4 @@
-package edu.skku.cc.jwt.dto;
+package edu.skku.cc.dto.jwt;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

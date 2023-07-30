@@ -1,8 +1,8 @@
 package edu.skku.cc.service;
 
 import edu.skku.cc.domain.User;
+import edu.skku.cc.dto.jwt.JwtDto;
 import edu.skku.cc.jwt.JwtTokenUtil;
-import edu.skku.cc.jwt.dto.JwtDto;
 import edu.skku.cc.redis.RedisUtil;
 import edu.skku.cc.repository.UserRepository;
 import edu.skku.cc.service.dto.KakaoUserInfoDto;
@@ -100,6 +100,7 @@ public class KakaoAuthService {
         User user = synchronizeUser(kakaoUserInfo);
         return getAccessTokenAndRefreshToken(user);
     }
+
     public KakaoUserInfoDto getKakaoUserInfo(String kakaoAccessToken) throws Exception {
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + kakaoAccessToken);
