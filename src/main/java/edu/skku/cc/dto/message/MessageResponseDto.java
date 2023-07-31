@@ -29,6 +29,7 @@ public class MessageResponseDto {
     private Boolean isQuiz;
     private String quizContent;
     private String quizAnswer;
+    private Boolean quizIsSolved;
 
     private String imageUrl;
 
@@ -48,6 +49,7 @@ public class MessageResponseDto {
                 .isQuiz(message.getQuiz() != null)
                 .quizContent(message.getQuiz() != null ? message.getQuiz().getContent() : null)
                 .quizAnswer(message.getQuiz() != null ? message.getQuiz().getAnswer() : null)
+                .quizIsSolved(message.getQuiz() != null ? message.getQuiz().getIsSolved() : null)
                 .build();
     }
 
