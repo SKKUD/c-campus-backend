@@ -5,6 +5,7 @@ import edu.skku.cc.jwt.JwtTokenUtil;
 import edu.skku.cc.jwt.dto.JwtDto;
 import edu.skku.cc.redis.RedisUtil;
 import edu.skku.cc.repository.UserRepository;
+import edu.skku.cc.service.dto.KakaoTokenDto;
 import edu.skku.cc.service.dto.KakaoUserInfoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,11 +45,10 @@ public class KakaoAuthService {
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String REDIRECT_URI;
 
-    public JwtDto kakaoLogin(String code) throws Exception {
-        String kakaoAccessToken = kakaoAuthenticate(code);
-        getKakaoUserInfo(kakaoAccessToken);
-        JwtDto jwtDto = getJwtToken(kakaoAccessToken);
-        return jwtDto;
+    public KakaoTokenDto kakaoLogin(String code) throws Exception {
+        KakaoTokenDto kakaoTokenDto = kakaoAuthenticate(code);
+        saveKakaoUserInfo(kakaoTokenDto);
+        return kakaoTokenDto;
     }
 
     public ResponseEntity<String> kakaoLogout() {
@@ -59,7 +59,7 @@ public class KakaoAuthService {
         return responseEntity;
     }
 
-    private String kakaoAuthenticate(String code) throws Exception {
+    private KakaoTokenDto kakaoAuthenticate(String code) throws Exception {
         String contentType = "application/x-www-form-urlencoded;charset=utf-8";
         String grantType = "authorization_code";
 
@@ -90,19 +90,43 @@ public class KakaoAuthService {
         JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
         String kakaoAccessToken = String.valueOf(jsonObject.get("access_token"));
-//        String kakaoRefreshToken = String.valueOf(jsonObject.get("refresh_token"));
+        String kakaoRefreshToken = String.valueOf(jsonObject.get("refresh_token"));
+        String kakaoIdToken = String.valueOf(jsonObject.get("id_token"));
 
-        return kakaoAccessToken;
+
+
+        log.info("kakaoIdToken {}", kakaoIdToken);
+        KakaoTokenDto kakaoTokenDto = new KakaoTokenDto(kakaoAccessToken,kakaoRefreshToken);
+
+        return kakaoTokenDto;
     }
 
-    private JwtDto getJwtToken(String kakaoAccessToken) throws Exception {
-        KakaoUserInfoDto kakaoUserInfo = getKakaoUserInfo(kakaoAccessToken);
-        User user = synchronizeUser(kakaoUserInfo);
-        return getAccessTokenAndRefreshToken(user);
+//    private JwtDto getJwtToken(String kakaoAccessToken) throws Exception {
+//        User user = synchronizeUser(kakaoUserInfo);
+//        return getAccessTokenAndRefreshToken(user);
+//    }
+//
+
+    public void saveKakaoUserInfo(KakaoTokenDto kakaoTokenDto) throws Exception {
+        KakaoUserInfoDto kakaoUserInfoDto = getKakaoUserInfo(kakaoTokenDto);
+        User user = kakaoUserInfoDto.toEntity();
+        log.info("user.getId() {}", user.getId());
+        log.info("user.getName() {}", user.getName());
+        log.info("user.getEmail() {}", user.getEmail());
+        User findUser = userRepository.findByEmail(user.getEmail());
+        saveUserIfNotExist(findUser);
     }
-    public KakaoUserInfoDto getKakaoUserInfo(String kakaoAccessToken) throws Exception {
+
+    private void saveUserIfNotExist(User user) {
+        if (user == null) {
+            log.info("findUser {}", user);
+            userRepository.save(user);
+        }
+    }
+
+    private KakaoUserInfoDto getKakaoUserInfo(KakaoTokenDto kakaoTokenDto) throws Exception {
         HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + kakaoAccessToken);
+        headers.add("Authorization", "Bearer " + kakaoTokenDto.getAccessToken());
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
 
         RestTemplate rt = new RestTemplate();
@@ -121,26 +145,26 @@ public class KakaoAuthService {
         return new KakaoUserInfoDto(nickname, email);
     }
 
-    private User synchronizeUser(KakaoUserInfoDto kakaoUserInfoDto) {
-        User user = kakaoUserInfoDto.toEntity();
-        log.info("user.getId() {}", user.getId());
-        log.info("user.getName() {}", user.getName());
-        log.info("user.getEmail() {}", user.getEmail());
-        User findUser = userRepository.findByEmail(user.getEmail());
-        if (findUser == null) {
-            log.info("findUser {}", findUser);
-            userRepository.save(user);
-            return user;
-        }
-        return findUser;
-    }
+//    private User synchronizeUser(KakaoUserInfoDto kakaoUserInfoDto) {
+//        User user = kakaoUserInfoDto.toEntity();
+//        log.info("user.getId() {}", user.getId());
+//        log.info("user.getName() {}", user.getName());
+//        log.info("user.getEmail() {}", user.getEmail());
+//        User findUser = userRepository.findByEmail(user.getEmail());
+//        if (findUser == null) {
+//            log.info("findUser {}", findUser);
+//            userRepository.save(user);
+//            return user;
+//        }
+//        return findUser;
+//    }
 
-    private JwtDto getAccessTokenAndRefreshToken(User user) {
-        log.info("user {}", user.getId());
-        String key = String.valueOf(user.getId());
-        String accessToken = jwtTokenUtil.createAccessToken(key);
-        String refreshToken = jwtTokenUtil.createRefreshToken();
-        redisUtil.saveRefreshToken(key, refreshToken, jwtTokenUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
-        return new JwtDto(accessToken, refreshToken);
-    }
+//    private JwtDto getAccessTokenAndRefreshToken(User user) {
+//        log.info("user {}", user.getId());
+//        String key = String.valueOf(user.getId());
+//        String accessToken = jwtTokenUtil.createAccessToken(key);
+//        String refreshToken = jwtTokenUtil.createRefreshToken();
+//        redisUtil.saveRefreshToken(key, refreshToken, jwtTokenUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
+//        return new JwtDto(accessToken, refreshToken);
+//    }
 }

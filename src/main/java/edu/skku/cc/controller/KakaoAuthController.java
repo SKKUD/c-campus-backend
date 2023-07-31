@@ -2,8 +2,10 @@ package edu.skku.cc.controller;
 
 import edu.skku.cc.jwt.dto.JwtDto;
 import edu.skku.cc.service.KakaoAuthService;
+import edu.skku.cc.service.dto.KakaoTokenDto;
 import edu.skku.cc.service.dto.KakaoUserInfoDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
+@Slf4j
 @RequiredArgsConstructor
 @Controller
 public class KakaoAuthController {
@@ -23,12 +26,14 @@ public class KakaoAuthController {
     private final KakaoAuthService kakaoAuthService;
 
     @GetMapping("/oauth2/callback/kakao")
-    public @ResponseBody ResponseEntity<JwtDto> kakaoCallback(String code) throws Exception {
-        JwtDto jwtDto = kakaoAuthService.kakaoLogin(code);
-        return ResponseEntity.ok().body(jwtDto);
+    public @ResponseBody ResponseEntity<KakaoTokenDto> kakaoCallback(String code) throws Exception {
+        KakaoTokenDto kakaoTokenDto = kakaoAuthService.kakaoLogin(code);
+        return ResponseEntity.ok().body(kakaoTokenDto);
     }
-    @GetMapping("/oauth/logout")
+    @PostMapping("/oauth2/kakao/logout")
     public @ResponseBody ResponseEntity kakaoLogout() {
-        return kakaoAuthService.kakaoLogout();
+        ResponseEntity re = kakaoAuthService.kakaoLogout();
+        log.info("logout response {}", re);
+        return re;
     }
 }

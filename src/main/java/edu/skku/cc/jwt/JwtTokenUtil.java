@@ -4,10 +4,18 @@ import edu.skku.cc.enums.JwtExpirationTime;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Date;
@@ -18,6 +26,7 @@ import java.util.Date;
 public class JwtTokenUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
+
     private long ACCESS_TOKEN_EXPIRATION_TIME = JwtExpirationTime.ACCESS_TOKEN_EXPIRATION_TIME.getExpirationTime();
     private long REFRESH_TOKEN_EXPIRE_TIME = JwtExpirationTime.REFRESH_TOKEN_EXPIRATION_TIME.getExpirationTime();
 
@@ -51,6 +60,41 @@ public class JwtTokenUtil {
         Authentication authentication = new UsernamePasswordAuthenticationToken(userId, token);
         log.info("authentication: {}", authentication.getPrincipal());
         return new UsernamePasswordAuthenticationToken(userId, token);
+    }
+
+    public Authentication getAuthenticationFromKakaoToken(String kakaoToken) throws Exception {
+        Claims claims = Jwts
+                .parserBuilder()
+//                .setSigningKey(SECRET_KEY.getBytes())
+                .build()
+                .parseClaimsJws(kakaoToken)
+                .getBody();
+
+        log.info("nickname {}", claims.get("nickname"));
+
+        String kakaoUserInfoUri = "https://kapi.kakao.com/v2/user/me";
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + kakaoToken);
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        RestTemplate rt = new RestTemplate();
+        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = rt.exchange(kakaoUserInfoUri, HttpMethod.GET, httpEntity, String.class);
+
+        JSONParser jsonParser = new JSONParser();
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
+        log.info("jsonObject {}", jsonObject);
+        JSONObject account = (JSONObject) jsonObject.get("kakao_account");
+        JSONObject profile = (JSONObject) account.get("profile");
+
+        String email = String.valueOf(account.get("email"));
+
+        log.info("email: {}", email);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(email, kakaoToken);
+        log.info("authentication: {}", authentication.getPrincipal());
+        return authentication;
     }
 
     public boolean validateToken(String token) {

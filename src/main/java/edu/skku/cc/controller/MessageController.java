@@ -49,12 +49,14 @@ public class MessageController {
         return ApiResponse.success(SuccessType.PULL_USER_MESSAGE_SUCCESS, messageService.pullMessage(userId));
     }
 
+    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @PostMapping("/users/{userId}/messages/{messageId}/quiz")
     public ApiResponse solveQuiz(@PathVariable Long userId, @PathVariable Long messageId, @RequestBody MessageSolveQuizRequestDto request) {
         messageService.solveMessageQuiz(userId, messageId, request.getAnswer());
         return ApiResponse.success(SuccessType.SOLVE_MESSAGE_QUIZ_SUCCESS);
     }
 
+    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @DeleteMapping("/users/{userId}/messages/{messageId}")
     public ApiResponse deleteMessage(@PathVariable Long userId, @PathVariable Long messageId) {
         messageService.deleteMessage(userId, messageId);
