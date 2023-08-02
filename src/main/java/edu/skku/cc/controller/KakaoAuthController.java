@@ -1,10 +1,8 @@
 package edu.skku.cc.controller;
 
-import edu.skku.cc.jwt.dto.JwtDto;
 import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.service.KakaoAuthService;
 import edu.skku.cc.service.dto.KakaoTokenDto;
-import edu.skku.cc.service.dto.KakaoUserInfoDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
