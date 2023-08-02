@@ -46,9 +46,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (kakaoTokenValidationResponse.getStatusCode() == HttpStatus.OK) {
             log.info("kakaoTokenValidationResponse {}", kakaoTokenValidationResponse);
             Authentication authentication = jwtTokenUtil.getAuthenticationFromKakaoToken(kakaoAccessToken);
-            if (authentication == null) {
-                System.out.println("HA!");
-            }
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.info("authentication.getPrincipal: {}", authentication.getPrincipal());
         }

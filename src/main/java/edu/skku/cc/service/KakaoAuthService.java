@@ -100,6 +100,8 @@ public class KakaoAuthService {
 
         KakaoTokenDto kakaoTokenDto = new KakaoTokenDto(kakaoAccessToken, kakaoRefreshToken);
 
+        log.info("kakaoTokenDto {}", kakaoTokenDto);
+
         return kakaoTokenDto;
     }
 
@@ -107,13 +109,14 @@ public class KakaoAuthService {
         KakaoUserInfoDto kakaoUserInfoDto = getKakaoUserInfo(kakaoTokenDto);
         User user = kakaoUserInfoDto.toEntity();
         User findUser = userRepository.findByEmail(user.getEmail());
-        saveUserIfNotExist(findUser);
+        if (findUser == null) {
+            saveUser(user);
+        }
     }
 
-    private void saveUserIfNotExist(User user) {
-        if (user == null) {
-            userRepository.save(user);
-        }
+    private void saveUser(User user) {
+        log.info("user {}", user);
+        userRepository.save(user);
     }
 
     private KakaoUserInfoDto getKakaoUserInfo(KakaoTokenDto kakaoTokenDto) throws Exception {
@@ -138,6 +141,9 @@ public class KakaoAuthService {
 
         String nickname = String.valueOf(profile.get("nickname"));
         String email = String.valueOf(account.get("email"));
+
+        log.info("nickname {}", nickname);
+        log.info("email {}", email);
 
         return new KakaoUserInfoDto(nickname, email);
     }
