@@ -1,6 +1,8 @@
 package edu.skku.cc.service;
 
 import edu.skku.cc.domain.User;
+import edu.skku.cc.dto.auth.KakaoUserInfoDto;
+import edu.skku.cc.dto.jwt.JwtDto;
 import edu.skku.cc.jwt.JwtTokenUtil;
 import edu.skku.cc.jwt.dto.JwtDto;
 import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;

@@ -3,7 +3,7 @@ package edu.skku.cc.exception;
 import lombok.Getter;
 
 @Getter
-public class CustomException extends RuntimeException{
+public class CustomException extends RuntimeException {
 
     private final ErrorType errorType;
 

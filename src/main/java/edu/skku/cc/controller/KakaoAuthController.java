@@ -30,6 +30,7 @@ public class KakaoAuthController {
         KakaoTokenDto kakaoTokenDto = kakaoAuthService.kakaoLogin(code);
         return ResponseEntity.ok().body(kakaoTokenDto);
     }
+    
     @PostMapping("/oauth2/kakao/logout")
     public @ResponseBody ResponseEntity kakaoLogout() {
         ResponseEntity re = kakaoAuthService.kakaoLogout();

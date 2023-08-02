@@ -1,21 +1,30 @@
 package edu.skku.cc.service;
 
-import edu.skku.cc.domain.Message;
-import edu.skku.cc.domain.Quiz;
-import edu.skku.cc.domain.User;
-import edu.skku.cc.dto.Message.MessageListResponseDto;
-import edu.skku.cc.dto.Message.MessagePublicUpdateResponseDto;
-import edu.skku.cc.dto.Message.SingleMessageResponseDto;
+import edu.skku.cc.domain.*;
+import edu.skku.cc.dto.message.CreateMessageRequestDto;
+import edu.skku.cc.dto.message.MessagePublicUpdateResponseDto;
+import edu.skku.cc.dto.message.MessageResponseDto;
 import edu.skku.cc.exception.CustomException;
 import edu.skku.cc.exception.ErrorType;
 import edu.skku.cc.repository.MessageRepository;
+import edu.skku.cc.repository.PhotoRepository;
 import edu.skku.cc.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,36 +35,79 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final PhotoRepository photoRepository;
+
+    private final S3Client s3Client;
+
+    @Value("${aws.s3.bucket}")
+    private String BUCKET_NAME;
+
+    @Value("${aws.s3.region}")
+    private String REGION;
 
     /**
      * Get all messages that user pulled
      * Order by pulledAt DESC
      */
-    public List<MessageListResponseDto> getUserPulledMessageList(Long userId) {
+    public List<MessageResponseDto> getUserPulledMessageList(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
         List<Message> messageList = user.getMessages();
 
         return messageList.stream()
                 .filter(Message::getIsPulled)
-                .sorted((m1, m2) -> m2.getPulledAt().compareTo(m1.getPulledAt()))
-                .map(MessageListResponseDto::of)
+                .sorted(Comparator.comparing(Message::getPulledAt).reversed())
+                .map(MessageResponseDto::of)
+                .peek(dto -> {
+                    dto.setImageUrl(getUrl(dto.getImageUuid()));
+                })
                 .collect(Collectors.toList());
     }
 
-    public SingleMessageResponseDto getSingleUserMessage(Long userId, Long messageId) {
-//        User user = userRepository.getUserById(userId);
-        // 수신인이면 open 여부 체크하기
+    public List<MessageResponseDto> getUserPublicPulledMessageList(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
+        List<Message> messageList = user.getMessages();
+
+        return messageList.stream()
+                .filter(message -> message.getIsPulled() && message.getIsPublic())
+                .sorted(Comparator.comparing(Message::getPulledAt).reversed())
+                .map(MessageResponseDto::of)
+                .peek(dto -> {
+                    dto.setImageUrl(getUrl(dto.getImageUuid()));
+                })
+                .collect(Collectors.toList());
+    }
+
+    public MessageResponseDto getSingleUserMessage(Long userId, Long messageId) {
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
-        return SingleMessageResponseDto.of(message);
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
+        // open 여부 체크
+        if (!message.getIsOpened()) {
+            message.openMessage();
+        }
+
+        MessageResponseDto dto = MessageResponseDto.of(message);
+        dto.setImageUrl(getUrl(dto.getImageUuid()));
+        return dto;
+    }
+
+    public MessageResponseDto getSingleUserPublicMessage(Long userId, Long messageId) {
+        Message message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
+
+        if (!message.getIsPublic()) {
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
+        }
+        MessageResponseDto dto = MessageResponseDto.of(message);
+        dto.setImageUrl(getUrl(dto.getImageUuid()));
+        return dto;
     }
 
     @Transactional
     public MessagePublicUpdateResponseDto updateMessagePublic(Long userId, Long messageId) {
-        // 메시지 수신인인지 체크
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
         message.updateIsPublic();
         return MessagePublicUpdateResponseDto.builder()
                 .messageId(message.getId())
@@ -68,7 +120,7 @@ public class MessageService {
      */
     public Long getRemainMessageCount(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
         List<Message> messageList = user.getMessages();
         return messageList.stream()
                 .filter(message -> !message.getIsPulled())
@@ -81,7 +133,7 @@ public class MessageService {
     @Transactional
     public Integer pullMessage(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
         List<Message> messageList = user.getMessages();
 
         // 5개 미만인 경우
@@ -90,7 +142,7 @@ public class MessageService {
         } else { // 5개 이상인 경우 5개 단위로 pull
             List<Message> unpulledMessageList = messageList.stream()
                     .filter(message -> !message.getIsPulled())
-                    .sorted((m1, m2) -> m1.getCreatedAt().compareTo(m2.getCreatedAt()))
+                    .sorted(Comparator.comparing(BaseTimeEntity::getCreatedAt))
                     .toList();
 
             int len = unpulledMessageList.size();
@@ -106,10 +158,8 @@ public class MessageService {
     }
 
     public void solveMessageQuiz(Long userId, Long messageId, String answer) {
-
-        // 메시지 수신인인지 체크
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
         Quiz messageQuiz = message.getQuiz();
         if (messageQuiz.getIsSolved()) {
             throw new CustomException(ErrorType.INVALID_SOLVE_REQUEST_EXCEPTION);
@@ -122,13 +172,145 @@ public class MessageService {
         }
     }
 
-    public Long deleteMessage(Long userId, Long messageId) {
-        // 권한 체크
+    @Transactional
+    public void deleteMessage(Long userId, Long messageId) {
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE));
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
+
+        if (!Objects.equals(message.getUser().getId(), userId)) {
+            throw new CustomException(ErrorType.INVALID_USER_EXCEPTION);
+        }
+
+        Photo photo = message.getPhoto();
+        if (photo != null) {
+            UUID uuid = photo.getImageUuid();
+            s3Client.deleteObject(DeleteObjectRequest.builder()
+                    .bucket(BUCKET_NAME)
+                    .key(uuid.toString())
+                    .build());
+        }
+
         messageRepository.delete(message);
-        return messageId;
     }
 
 
+    @Transactional
+    public Long createMessage(Long userId, CreateMessageRequestDto request, MultipartFile file) {
+        if (file.getContentType() != null && !file.getContentType().startsWith("image")) {
+            throw new CustomException(ErrorType.INVALID_FILE_TYPE_EXCEPTION);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
+
+        Message message = Message.builder()
+                .user(user)
+                .category(request.getCategory())
+                .content(request.getContent())
+                .author(request.getAuthor())
+                .backgroundColorCode(request.getBackgroundColorCode())
+                .isOpened(false)
+                .isPulled(false)
+                .isPublic(false)
+                .build();
+
+        if (!file.isEmpty()) {
+            UUID uuid = UUID.randomUUID(); // UUID for s3 file name
+
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(BUCKET_NAME)
+                    .key(uuid.toString())
+                    .contentType(file.getContentType())
+                    .build();
+
+            try {
+                s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
+            } catch (IOException e) {
+                throw new CustomException(ErrorType.FILE_UPLOAD_EXCEPTION);
+            }
+
+            message.setPhoto(uuid);
+        }
+
+        if (request.getIsQuiz()) {
+            message.setQuiz(request.getQuizContent(), request.getQuizAnswer());
+        }
+
+        messageRepository.save(message);
+
+        // TODO: DB 오류 발생시 S3에 저장된 파일 삭제
+
+        return message.getId();
+    }
+
+    @Transactional
+    public String uploadUserPhoto(Long userId, MultipartFile file) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
+
+        if (file.getContentType() != null && !file.getContentType().startsWith("image")) {
+            throw new CustomException(ErrorType.INVALID_FILE_TYPE_EXCEPTION);
+        }
+
+        UUID uuid = UUID.randomUUID(); // UUID for s3 file name
+
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(BUCKET_NAME)
+                .key(uuid.toString())
+                .contentType(file.getContentType())
+                .build();
+
+        try {
+            s3Client.putObject(putObjectRequest, RequestBody.fromBytes(file.getBytes()));
+        } catch (IOException e) {
+            throw new CustomException(ErrorType.FILE_UPLOAD_EXCEPTION);
+        }
+
+        Photo photo = Photo.builder()
+                .imageUuid(uuid)
+                .build();
+
+        user.addPhoto(photo);
+        userRepository.save(user);
+
+        return getUrl(uuid);
+    }
+
+    @Transactional
+    public void deletePhoto(Long userId, String imageUuid) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
+
+        Photo photo = photoRepository.findByImageUuid(UUID.fromString(imageUuid))
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_IMAGE_EXCEPTION));
+
+        if (!Objects.equals(photo.getUser().getId(), user.getId())) {
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
+        }
+
+        UUID uuid = photo.getImageUuid();
+        s3Client.deleteObject(DeleteObjectRequest.builder()
+                .bucket(BUCKET_NAME)
+                .key(uuid.toString())
+                .build());
+
+        photoRepository.delete(photo);
+    }
+
+    public List<String> getUserPhotoList(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
+
+        List<Photo> photoList = user.getPhotos();
+        return photoList.stream()
+                .map(photo -> getUrl(photo.getImageUuid()))
+                .toList();
+    }
+
+    private String getUrl(UUID uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        return String.format("https://%s.s3.%s.amazonaws.com/%s", BUCKET_NAME, REGION, uuid);
+    }
 }

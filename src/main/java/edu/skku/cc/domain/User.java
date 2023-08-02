@@ -14,8 +14,8 @@ import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseTimeEntity {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_id")
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false, unique = true)
@@ -24,19 +24,24 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Message> messages;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Photo> photos;
+
+    public User(String name, String email) {
+        this.name = name;
+        this.email = email;
+    }
+
+    public void addPhoto(Photo photo) {
+        photo.setUser(this);
+        photos.add(photo);
+    }
 
     public Integer getMessageCount() {
         return messages.size();
-    }
-
-    public User (String name, String email) {
-        this.name = name;
-        this.email = email;
     }
 }
 

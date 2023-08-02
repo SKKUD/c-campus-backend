@@ -10,8 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 @Component
 @RequiredArgsConstructor
-public class ControllerExceptionAdvice
-{
+public class ControllerExceptionAdvice {
     /**
      * CUSTOM_ERROR
      */
