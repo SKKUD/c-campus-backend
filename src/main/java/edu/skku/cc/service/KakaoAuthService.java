@@ -3,6 +3,7 @@ package edu.skku.cc.service;
 import edu.skku.cc.domain.User;
 import edu.skku.cc.jwt.JwtTokenUtil;
 import edu.skku.cc.jwt.dto.JwtDto;
+import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.redis.RedisUtil;
 import edu.skku.cc.repository.UserRepository;
 import edu.skku.cc.service.dto.KakaoTokenDto;
@@ -20,8 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -52,19 +56,21 @@ public class KakaoAuthService {
     }
 
     public ResponseEntity<String> kakaoLogout() {
+        RestTemplate rt = new RestTemplate();
+
         String logoutRedirectUrl = "http://localhost:8080";
         String kakaoLogouttUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + CLIENT_ID + "&logout_redirect_uri=" + logoutRedirectUrl;
-        RestTemplate rt = new RestTemplate();
+
         ResponseEntity<String> responseEntity = rt.getForEntity(kakaoLogouttUrl, String.class);
         return responseEntity;
     }
 
     private KakaoTokenDto kakaoAuthenticate(String code) throws Exception {
-        String contentType = "application/x-www-form-urlencoded;charset=utf-8";
-        String grantType = "authorization_code";
-
         HttpHeaders headers = new HttpHeaders();
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+
+        String contentType = "application/x-www-form-urlencoded;charset=utf-8";
+        String grantType = "authorization_code";
 
         // Headers
         headers.add("Content-type", contentType);
@@ -91,51 +97,42 @@ public class KakaoAuthService {
         JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
         String kakaoAccessToken = String.valueOf(jsonObject.get("access_token"));
         String kakaoRefreshToken = String.valueOf(jsonObject.get("refresh_token"));
-        String kakaoIdToken = String.valueOf(jsonObject.get("id_token"));
 
-
-
-        log.info("kakaoIdToken {}", kakaoIdToken);
-        KakaoTokenDto kakaoTokenDto = new KakaoTokenDto(kakaoAccessToken,kakaoRefreshToken);
+        KakaoTokenDto kakaoTokenDto = new KakaoTokenDto(kakaoAccessToken, kakaoRefreshToken);
 
         return kakaoTokenDto;
     }
 
-//    private JwtDto getJwtToken(String kakaoAccessToken) throws Exception {
-//        User user = synchronizeUser(kakaoUserInfo);
-//        return getAccessTokenAndRefreshToken(user);
-//    }
-//
-
     public void saveKakaoUserInfo(KakaoTokenDto kakaoTokenDto) throws Exception {
         KakaoUserInfoDto kakaoUserInfoDto = getKakaoUserInfo(kakaoTokenDto);
         User user = kakaoUserInfoDto.toEntity();
-        log.info("user.getId() {}", user.getId());
-        log.info("user.getName() {}", user.getName());
-        log.info("user.getEmail() {}", user.getEmail());
         User findUser = userRepository.findByEmail(user.getEmail());
         saveUserIfNotExist(findUser);
     }
 
     private void saveUserIfNotExist(User user) {
         if (user == null) {
-            log.info("findUser {}", user);
             userRepository.save(user);
         }
     }
 
     private KakaoUserInfoDto getKakaoUserInfo(KakaoTokenDto kakaoTokenDto) throws Exception {
+        RestTemplate rt = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
+        JSONParser jsonParser = new JSONParser();
+
         headers.add("Authorization", "Bearer " + kakaoTokenDto.getAccessToken());
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
 
-        RestTemplate rt = new RestTemplate();
         HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(headers);
-        ResponseEntity<String> response = rt.exchange(USER_INFO_URL, HttpMethod.POST, httpEntity, String.class);
+        ResponseEntity<String> response = rt.exchange(
+                USER_INFO_URL,
+                HttpMethod.POST,
+                httpEntity,
+                String.class
+        );
 
-        JSONParser jsonParser = new JSONParser();
         JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
-        log.info("jsonObject {}", jsonObject);
         JSONObject account = (JSONObject) jsonObject.get("kakao_account");
         JSONObject profile = (JSONObject) account.get("profile");
 
@@ -143,6 +140,30 @@ public class KakaoAuthService {
         String email = String.valueOf(account.get("email"));
 
         return new KakaoUserInfoDto(nickname, email);
+    }
+
+    public KakaoAccessTokenDto getNewKakaoAccessToken(String refreshToken) throws Exception{
+        RestTemplate rt = new RestTemplate();
+        HttpHeaders headers = new HttpHeaders();
+        JSONParser jsonParser = new JSONParser();
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        params.add("grant_type", "refresh_token");
+        params.add("client_id", CLIENT_ID);
+        log.info("refresh token {}", refreshToken);
+        params.add("refresh_token", refreshToken);
+        params.add("client_secret", CLIENT_SECRET);
+
+
+        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(params, headers);
+
+        ResponseEntity<String> response = rt.exchange(TOKEN_URL, HttpMethod.POST, httpEntity, String.class);
+
+        JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
+        String kakaoAccessToken = String.valueOf(jsonObject.get("access_token"));
+        return new KakaoAccessTokenDto(kakaoAccessToken);
     }
 
 //    private User synchronizeUser(KakaoUserInfoDto kakaoUserInfoDto) {

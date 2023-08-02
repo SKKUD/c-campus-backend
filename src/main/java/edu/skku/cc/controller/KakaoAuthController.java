@@ -1,6 +1,7 @@
 package edu.skku.cc.controller;
 
 import edu.skku.cc.jwt.dto.JwtDto;
+import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.service.KakaoAuthService;
 import edu.skku.cc.service.dto.KakaoTokenDto;
 import edu.skku.cc.service.dto.KakaoUserInfoDto;
@@ -13,9 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Slf4j
@@ -35,5 +35,15 @@ public class KakaoAuthController {
         ResponseEntity re = kakaoAuthService.kakaoLogout();
         log.info("logout response {}", re);
         return re;
+    }
+
+    @PostMapping("/oauth2/kakao/refresh")
+    public @ResponseBody ResponseEntity kakaoRefresh(@RequestParam("refresh_token") String refreshToken) throws Exception{
+        try {
+            KakaoAccessTokenDto newAccessToken = kakaoAuthService.getNewKakaoAccessToken(refreshToken);
+            return ResponseEntity.ok().body(newAccessToken);
+        } catch (HttpClientErrorException.BadRequest e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

@@ -2,10 +2,12 @@ package edu.skku.cc.jwt;
 
 import edu.skku.cc.enums.JwtExpirationTime;
 import io.jsonwebtoken.*;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -14,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
@@ -62,16 +65,7 @@ public class JwtTokenUtil {
         return new UsernamePasswordAuthenticationToken(userId, token);
     }
 
-    public Authentication getAuthenticationFromKakaoToken(String kakaoToken) throws Exception {
-        Claims claims = Jwts
-                .parserBuilder()
-//                .setSigningKey(SECRET_KEY.getBytes())
-                .build()
-                .parseClaimsJws(kakaoToken)
-                .getBody();
-
-        log.info("nickname {}", claims.get("nickname"));
-
+    public Authentication getAuthenticationFromKakaoToken(String kakaoToken) {
         String kakaoUserInfoUri = "https://kapi.kakao.com/v2/user/me";
 
         HttpHeaders headers = new HttpHeaders();
@@ -81,20 +75,23 @@ public class JwtTokenUtil {
         RestTemplate rt = new RestTemplate();
         HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(headers);
 
-        ResponseEntity<String> response = rt.exchange(kakaoUserInfoUri, HttpMethod.GET, httpEntity, String.class);
+        try {
+            ResponseEntity<String> response = rt.exchange(kakaoUserInfoUri, HttpMethod.GET, httpEntity, String.class);
 
-        JSONParser jsonParser = new JSONParser();
-        JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
-        log.info("jsonObject {}", jsonObject);
-        JSONObject account = (JSONObject) jsonObject.get("kakao_account");
-        JSONObject profile = (JSONObject) account.get("profile");
+            JSONParser jsonParser = new JSONParser();
+            JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
+            JSONObject account = (JSONObject) jsonObject.get("kakao_account");
+            JSONObject profile = (JSONObject) account.get("profile");
 
-        String email = String.valueOf(account.get("email"));
+            String email = String.valueOf(account.get("email"));
 
-        log.info("email: {}", email);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(email, kakaoToken);
-        log.info("authentication: {}", authentication.getPrincipal());
-        return authentication;
+            log.info("email: {}", email);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(email, kakaoToken);
+            log.info("authentication: {}", authentication.getPrincipal());
+            return authentication;
+        } catch (ParseException e) {
+            return null;
+        }
     }
 
     public boolean validateToken(String token) {
