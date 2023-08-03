@@ -1,6 +1,8 @@
 package edu.skku.cc.jwt;
 
+import edu.skku.cc.domain.User;
 import edu.skku.cc.enums.JwtExpirationTime;
+import edu.skku.cc.repository.UserRepository;
 import io.jsonwebtoken.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +24,13 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Date;
+import java.util.HashMap;
 
 @Component
 @Slf4j
 @RequiredArgsConstructor
 public class JwtTokenUtil {
+    private final UserRepository userRepository;
     private final long ACCESS_TOKEN_EXPIRATION_TIME = JwtExpirationTime.ACCESS_TOKEN_EXPIRATION_TIME.getExpirationTime();
     private final long REFRESH_TOKEN_EXPIRE_TIME = JwtExpirationTime.REFRESH_TOKEN_EXPIRATION_TIME.getExpirationTime();
     @Value("${jwt.secret}")
@@ -82,12 +86,15 @@ public class JwtTokenUtil {
             JSONObject profile = (JSONObject) account.get("profile");
 
             String email = String.valueOf(account.get("email"));
+            User user = userRepository.findByEmail(email);
+            if (user == null) {
+                throw new Exception("No such user");
+            }
 
-            log.info("email: {}", email);
-            Authentication authentication = new UsernamePasswordAuthenticationToken(email, kakaoToken);
+            Authentication authentication = new UsernamePasswordAuthenticationToken(email, user.getId());
             log.info("authentication: {}", authentication.getPrincipal());
             return authentication;
-        } catch (ParseException e) {
+        } catch (Exception e) {
             return null;
         }
     }
