@@ -21,6 +21,7 @@ public class WebSecurity {
         log.info("userId {}", userId);
         User user = userRepository.findByEmail(String.valueOf(authentication.getPrincipal()));
         if (user != null && userId.equals(String.valueOf(user.getId()))) {
+            log.info("user id {}", authentication.getCredentials());
             log.info("user authenticated {}", true);
             return true;
         }
