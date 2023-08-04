@@ -5,6 +5,8 @@ import edu.skku.cc.dto.message.CreateMessageRequestDto;
 import edu.skku.cc.dto.message.MessagePublicUpdateResponseDto;
 import edu.skku.cc.dto.message.MessageResponseDto;
 import edu.skku.cc.dto.message.MessageSolveQuizRequestDto;
+import edu.skku.cc.exception.CustomException;
+import edu.skku.cc.exception.ErrorType;
 import edu.skku.cc.exception.SuccessType;
 import edu.skku.cc.service.MessageService;
 import jakarta.validation.Valid;
@@ -44,22 +46,29 @@ public class MessageController {
         }
     }
 
-    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @PatchMapping("/users/{userId}/messages/{messageId}")
-    public ApiResponse<MessagePublicUpdateResponseDto> updateMessagePublic(@PathVariable Long userId, @PathVariable Long messageId) {
+    public ApiResponse<MessagePublicUpdateResponseDto> updateMessagePublic(@PathVariable Long userId, @PathVariable Long messageId, Authentication authentication) {
+        if (!(authentication!= null && authentication.getCredentials().equals(userId))) {
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
+        }
         messageService.updateMessagePublic(userId, messageId);
         return ApiResponse.success(SuccessType.UPDATE_USER_MESSAGE_PUBLIC_SUCCESS, messageService.updateMessagePublic(userId, messageId));
     }
 
-    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @GetMapping("/users/{userId}/message/remain-count")
-    public ApiResponse<Long> getRemainMessageCount(@PathVariable Long userId) {
+    public ApiResponse<Long> getRemainMessageCount(@PathVariable Long userId, Authentication authentication) {
+        if (!(authentication!= null && authentication.getCredentials().equals(userId))) {
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
+        }
         return ApiResponse.success(SuccessType.GET_USER_REMAIN_MESSAGE_COUNT_SUCCESS, messageService.getRemainMessageCount(userId));
     }
 
-    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
+
     @GetMapping("/users/{userId}/messages/unpulled")
-    public ApiResponse<Integer> getUserUnpulledMessageList(@PathVariable Long userId) {
+    public ApiResponse<Integer> getUserUnpulledMessageList(@PathVariable Long userId, Authentication authentication) {
+        if (!(authentication!= null && authentication.getCredentials().equals(userId))) {
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
+        }
         return ApiResponse.success(SuccessType.PULL_USER_MESSAGE_SUCCESS, messageService.pullMessage(userId));
     }
 
@@ -68,35 +77,47 @@ public class MessageController {
         return ApiResponse.success(SuccessType.CREATE_MESSAGE_SUCCESS, messageService.createMessage(userId, request, file));
     }
 
-    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
+
     @PostMapping("/users/{userId}/messages/{messageId}/quiz")
-    public ApiResponse solveQuiz(@PathVariable Long userId, @PathVariable Long messageId, @RequestBody @Valid MessageSolveQuizRequestDto request) {
+    public ApiResponse solveQuiz(@PathVariable Long userId, @PathVariable Long messageId, @RequestBody @Valid MessageSolveQuizRequestDto request, Authentication authentication) {
+        if (!(authentication!= null && authentication.getCredentials().equals(userId))) {
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
+        }
         messageService.solveMessageQuiz(userId, messageId, request.getAnswer());
         return ApiResponse.success(SuccessType.SOLVE_MESSAGE_QUIZ_SUCCESS);
     }
 
-    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @DeleteMapping("/users/{userId}/messages/{messageId}")
-    public ApiResponse deleteMessage(@PathVariable Long userId, @PathVariable Long messageId) {
+    public ApiResponse deleteMessage(@PathVariable Long userId, @PathVariable Long messageId, Authentication authentication) {
+        if (!(authentication!= null && authentication.getCredentials().equals(userId))) {
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
+        }
         messageService.deleteMessage(userId, messageId);
         return ApiResponse.success(SuccessType.DELETE_MESSAGE_SUCCESS);
     }
 
-    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @GetMapping("/users/{userId}/photos")
-    public ApiResponse<List<String>> getUserPhotoList(@PathVariable Long userId) {
-        return ApiResponse.success(SuccessType.GET_USER_IMAGE_ALL_SUCCESS, messageService.getUserPhotoList(userId));
+    public ApiResponse<List<String>> getUserPhotoList(@PathVariable Long userId, Authentication authentication) {
+        if (authentication!= null && authentication.getCredentials().equals(userId)){
+            // 수신자 본인 -> 본인의 모든 사진 조회
+            return ApiResponse.success(SuccessType.GET_USER_IMAGE_ALL_SUCCESS, messageService.getUserPhotoList(userId));
+        }
+        else {
+            // 방문자 -> public 사진만 조회
+
+        }
     }
 
-    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @PostMapping("/users/{userId}/photos")
     public ApiResponse<String> uploadUserPhoto(@PathVariable Long userId, @RequestPart MultipartFile file) {
         return ApiResponse.success(SuccessType.CREATE_USER_IMAGE_SUCCESS, messageService.uploadUserPhoto(userId, file));
     }
 
-    @PreAuthorize("@webSecurity.checkAuthority(authentication, #userId)")
     @DeleteMapping("/users/{userId}/photos/{imageUuid}")
-    public ApiResponse deleteUserPhoto(@PathVariable Long userId, @PathVariable String imageUuid) {
+    public ApiResponse deleteUserPhoto(@PathVariable Long userId, @PathVariable String imageUuid, Authentication authentication) {
+        if (!(authentication!= null && authentication.getCredentials().equals(userId))) {
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
+        }
         messageService.deletePhoto(userId, imageUuid);
         return ApiResponse.success(SuccessType.DELETE_IMAGE_SUCCESS);
     }
