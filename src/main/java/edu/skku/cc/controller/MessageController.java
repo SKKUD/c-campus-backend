@@ -98,14 +98,10 @@ public class MessageController {
 
     @GetMapping("/users/{userId}/photos")
     public ApiResponse<List<String>> getUserPhotoList(@PathVariable Long userId, Authentication authentication) {
-        if (authentication!= null && authentication.getCredentials().equals(userId)){
-            // 수신자 본인 -> 본인의 모든 사진 조회
-            return ApiResponse.success(SuccessType.GET_USER_IMAGE_ALL_SUCCESS, messageService.getUserPhotoList(userId));
+        if (!(authentication!= null && authentication.getCredentials().equals(userId))) {
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         }
-        else {
-            // 방문자 -> public 사진만 조회
-
-        }
+        return ApiResponse.success(SuccessType.GET_USER_IMAGE_ALL_SUCCESS, messageService.getUserPhotoList(userId));
     }
 
     @PostMapping("/users/{userId}/photos")
