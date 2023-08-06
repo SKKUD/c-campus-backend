@@ -16,7 +16,6 @@ import java.util.Optional;
 @Slf4j
 public class WebSecurity {
     private final UserRepository userRepository;
-    private final MessageRepository messageRepository;
     public boolean checkAuthority(Authentication authentication, String userId) {
         log.info("userId {}", userId);
         User user = userRepository.findByEmail(String.valueOf(authentication.getPrincipal()));
@@ -29,19 +28,5 @@ public class WebSecurity {
             log.info("user authenticated {}", false);
             return false;
         }
-    }
-
-    public boolean checkAuthority(Authentication authentication, String userId, Long messageId) {
-        Optional<Message> optionalMessage = messageRepository.findById(messageId);
-        if (optionalMessage.isPresent()) {
-            Message message = optionalMessage.get();
-            log.info("message {}", message.getId());
-            if (message.getIsPublic() == false) { // 위임
-                log.info("message public or private {}", "private");
-                return checkAuthority(authentication, userId);
-            }
-            log.info("message public or private {}", "public");
-        }
-        return true;
     }
 }

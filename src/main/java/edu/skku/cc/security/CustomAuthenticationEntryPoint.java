@@ -1,5 +1,7 @@
 package edu.skku.cc.security;
 
+import edu.skku.cc.exception.CustomException;
+import edu.skku.cc.exception.ErrorType;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -20,17 +22,17 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         if (authException instanceof BadCredentialsException) {
             log.info("authException {}", authException.getClass());
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: Bad credentials");
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         } else if (authException instanceof DisabledException) {
             log.info("authException {}", authException.getClass());
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "Forbidden: Account is disabled");
         }
         else if (authException instanceof InsufficientAuthenticationException) {
             log.info("authException {}", authException.getClass());
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized: Bad credentials");
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         } else {
             log.info("authException {}", authException.getClass());
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized!!");
+            throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         }
     }
 }
