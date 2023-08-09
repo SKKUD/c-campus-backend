@@ -1,14 +1,15 @@
 package edu.skku.cc.controller;
 
+import edu.skku.cc.enums.JwtExpirationTime;
+import edu.skku.cc.jwt.KakaoAuthenticationFilter;
 import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.service.KakaoAuthService;
 import edu.skku.cc.service.dto.KakaoTokenDto;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -22,11 +23,27 @@ import org.springframework.web.client.RestTemplate;
 public class KakaoAuthController {
 
     private final KakaoAuthService kakaoAuthService;
+    private String authRedirectUrl = "http://localhost:3000";
 
     @GetMapping("/oauth2/callback/kakao")
-    public @ResponseBody ResponseEntity<KakaoTokenDto> kakaoCallback(String code) throws Exception {
+    public @ResponseBody ResponseEntity kakaoCallback(String code, HttpServletResponse response) throws Exception {
         KakaoTokenDto kakaoTokenDto = kakaoAuthService.kakaoLogin(code);
-        return ResponseEntity.ok().body(kakaoTokenDto);
+        Cookie accessTokenCookie = new Cookie("accessToken", kakaoTokenDto.getAccessToken());
+        Cookie refreshTokenCookie = new Cookie("refreshToken", kakaoTokenDto.getRefreshToken());
+        accessTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setMaxAge(3600); // Cookie 1 expires after 1 hour
+        accessTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
+        refreshTokenCookie.setMaxAge(7200); // Cookie 2 expires after 2 hours
+        refreshTokenCookie.setPath("/");    // Cookie 2 is accessible to all paths
+
+        response.addCookie(accessTokenCookie);
+        response.addCookie(refreshTokenCookie);
+        response.addHeader("Location", authRedirectUrl);
+
+        ResponseEntity responseEntity = ResponseEntity.status(HttpStatus.FOUND)
+                .body("redirecting to frontend");
+        return responseEntity;
     }
     
     @PostMapping("/oauth2/kakao/logout")
