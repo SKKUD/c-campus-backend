@@ -39,6 +39,7 @@ public class KakaoAuthController {
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
+        response.addHeader("Location", authRedirectUrl);
 
         ResponseEntity responseEntity = ResponseEntity.status(HttpStatus.FOUND)
                 .body("redirecting to frontend");

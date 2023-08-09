@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.skku.cc.exception.CustomException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -34,10 +35,18 @@ public class KakaoAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String bearerToken = request.getHeader("Authorization");
-        String kakaoAccessToken = parseBearerToken(bearerToken);
+//        String bearerToken = request.getHeader("Authorization");
+        String kakaoAccessToken = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                System.out.println(cookie.getName());
+                if (cookie.getName().equals("accessToken")) {
+                    kakaoAccessToken = cookie.getValue();
+                }
+            }
+        }
 
-        log.info("bearerToken {}", bearerToken);
         log.info("kakaoAccessToken {}", kakaoAccessToken);
 
         ResponseEntity<String> kakaoTokenValidationResponse = getKakaoTokenValidationResponse(kakaoAccessToken);
@@ -51,6 +60,7 @@ public class KakaoAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             log.info("Filter chain success");
         } catch (CustomException e) {
+            log.info("HERE1");
             String jsonString = createErrorResponse(e);
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json");
@@ -93,6 +103,7 @@ public class KakaoAuthenticationFilter extends OncePerRequestFilter {
             log.info("Exception: {}", e.getMessage());
             return new ResponseEntity<>(e.getMessage(), HttpStatus.UNAUTHORIZED);
         } catch (HttpClientErrorException.BadRequest e) {
+            log.info("HERE2");
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
