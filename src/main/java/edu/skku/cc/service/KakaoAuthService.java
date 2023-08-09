@@ -8,6 +8,7 @@ import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.redis.RedisUtil;
 import edu.skku.cc.repository.UserRepository;
 import edu.skku.cc.service.dto.KakaoTokenDto;
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
@@ -59,9 +60,9 @@ public class KakaoAuthService {
         RestTemplate rt = new RestTemplate();
 
         String logoutRedirectUrl = "http://localhost:8080";
-        String kakaoLogouttUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + CLIENT_ID + "&logout_redirect_uri=" + logoutRedirectUrl;
+        String kakaoLogoutUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + CLIENT_ID + "&logout_redirect_uri=" + logoutRedirectUrl;
 
-        ResponseEntity<String> responseEntity = rt.getForEntity(kakaoLogouttUrl, String.class);
+        ResponseEntity<String> responseEntity = rt.getForEntity(kakaoLogoutUrl, String.class);
         return responseEntity;
     }
 
