@@ -1,5 +1,6 @@
 package edu.skku.cc.controller;
 
+import edu.skku.cc.dto.jwt.JwtDto;
 import edu.skku.cc.enums.JwtExpirationTime;
 import edu.skku.cc.jwt.KakaoAuthenticationFilter;
 import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
@@ -17,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Collection;
+
 @Slf4j
 @RequiredArgsConstructor
 @Controller
@@ -27,9 +30,9 @@ public class KakaoAuthController {
 
     @GetMapping("/oauth2/callback/kakao")
     public @ResponseBody ResponseEntity kakaoCallback(String code, HttpServletResponse response) throws Exception {
-        KakaoTokenDto kakaoTokenDto = kakaoAuthService.kakaoLogin(code);
-        Cookie accessTokenCookie = new Cookie("accessToken", kakaoTokenDto.getAccessToken());
-        Cookie refreshTokenCookie = new Cookie("refreshToken", kakaoTokenDto.getRefreshToken());
+        JwtDto jwtDto = kakaoAuthService.kakaoLogin(code);
+        Cookie accessTokenCookie = new Cookie("accessToken", jwtDto.getAccessToken());
+        Cookie refreshTokenCookie = new Cookie("refreshToken", jwtDto.getRefreshToken());
         accessTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setHttpOnly(true);
         accessTokenCookie.setMaxAge(3600); // Cookie 1 expires after 1 hour
@@ -39,7 +42,9 @@ public class KakaoAuthController {
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
+
         response.addHeader("Location", authRedirectUrl);
+        addSameSite(response, "Lax");
 
         ResponseEntity responseEntity = ResponseEntity.status(HttpStatus.FOUND)
                 .body("redirecting to frontend");
@@ -60,6 +65,19 @@ public class KakaoAuthController {
             return ResponseEntity.ok().body(newAccessToken);
         } catch (HttpClientErrorException.BadRequest e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    private void addSameSite(HttpServletResponse response, String sameSite) {
+        Collection<String> headers = response.getHeaders(HttpHeaders.SET_COOKIE);
+        boolean firstHeader = true;
+        for (String header : headers) {
+            if (firstHeader) {
+                response.setHeader(HttpHeaders.SET_COOKIE, String.format("%s; Secure; %s", header, "SameSite=" + sameSite));
+                firstHeader = false;
+                continue;
+            }
+            response.addHeader(HttpHeaders.SET_COOKIE, String.format("%s; Secure; %s", header, "SameSite=" + sameSite));
         }
     }
 }
