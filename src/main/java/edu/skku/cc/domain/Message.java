@@ -1,5 +1,7 @@
 package edu.skku.cc.domain;
 
+import edu.skku.cc.exception.CustomException;
+import edu.skku.cc.exception.ErrorType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -77,7 +79,8 @@ public class Message extends BaseTimeEntity {
     }
 
     public void solveQuiz() {
-        this.quiz.solve();
+        if(this.getQuiz() != null) {this.quiz.solve();}
+        else throw new CustomException(ErrorType.INVALID_MESSAGE_QUIZ_EXCEPTION);
     }
 
     public void openMessage() {
