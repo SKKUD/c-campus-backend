@@ -297,12 +297,17 @@ public class MessageService {
         photoRepository.delete(photo);
     }
 
+    /**
+     * Message quiz 없거나 Solved인 Message의 Photo URL List 반환
+     */
     public List<String> getUserPhotoList(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
 
         List<Photo> photoList = user.getPhotos();
+
         return photoList.stream()
+                .filter(photo -> (photo.getMessage().getQuiz() == null || photo.getMessage().getQuiz().getIsSolved()))
                 .map(photo -> getUrl(photo.getImageUuid()))
                 .toList();
     }

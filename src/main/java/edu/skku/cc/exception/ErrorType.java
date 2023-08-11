@@ -17,6 +17,7 @@ public enum ErrorType {
     INVALID_SOLVE_REQUEST_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 풀린 퀴즈입니다."),
     WRONG_ANSWER_EXCEPTION(HttpStatus.BAD_REQUEST, "퀴즈 정답이 아닙니다."),
     INVALID_FILE_TYPE_EXCEPTION(HttpStatus.BAD_REQUEST, "지원하지 않는 파일 형식입니다."),
+    INVALID_MESSAGE_QUIZ_EXCEPTION(HttpStatus.BAD_REQUEST, "퀴즈가 존재하지 않는 메시지입니다."),
 
     /**
      * 401 UNAUTHORIZED
@@ -32,10 +33,9 @@ public enum ErrorType {
     INVALID_IMAGE_EXCEPTION(HttpStatus.NOT_FOUND, "존재하지 않는 이미지입니다."),
 
 
-    /*
+    /**
      * 500 INTERNAL SERVER ERROR
      */
-
     FILE_UPLOAD_EXCEPTION(HttpStatus.INTERNAL_SERVER_ERROR, "파일 업로드에 실패했습니다.");
 
 
