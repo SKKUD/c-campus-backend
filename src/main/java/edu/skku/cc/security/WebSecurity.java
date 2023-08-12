@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import javax.swing.text.html.Option;
 import java.util.Optional;
 
 @Component("webSecurity")
@@ -16,10 +17,10 @@ import java.util.Optional;
 @Slf4j
 public class WebSecurity {
     private final UserRepository userRepository;
-    public boolean checkAuthority(Authentication authentication, String userId) {
+    public boolean checkAuthority(Authentication authentication, Long userId) {
         log.info("userId {}", userId);
-        User user = userRepository.findByEmail(String.valueOf(authentication.getPrincipal()));
-        if (user != null && userId.equals(String.valueOf(user.getId()))) {
+        Optional<User> optionalUser = userRepository.findById(userId);
+        if (optionalUser.isPresent() && optionalUser.get().getId() == userId) {
             log.info("user id {}", authentication.getCredentials());
             log.info("user authenticated {}", true);
             return true;

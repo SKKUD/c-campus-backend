@@ -37,21 +37,21 @@ public class KakaoAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 //        String bearerToken = request.getHeader("Authorization");
-        String accessToken = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                System.out.println(cookie.getName());
-                if (cookie.getName().equals("accessToken")) {
-                    accessToken = cookie.getValue();
-                }
-            }
-        }
-        else {
-            log.info("There is no cookie");
-        }
+        String accessToken = String.valueOf(request.getSession().getAttribute("accessToken"));
+//        Cookie[] cookies = request.getCookies();
+//        if (cookies != null) {
+//            for (Cookie cookie : cookies) {
+//                System.out.println(cookie.getName());
+//                if (cookie.getName().equals("accessToken")) {
+//                    accessToken = cookie.getValue();
+//                }
+//            }
+//        }
+//        else {
+//            log.info("There is no cookie");
+//        }
 
-        log.info("accessToken {}", accessToken);
+        log.info("accessToken value: {}", accessToken);
 
         if (StringUtils.hasText(accessToken) && jwtTokenUtil.validateToken(accessToken)) {
             Authentication authentication = jwtTokenUtil.getAuthenticationFromToken(accessToken);

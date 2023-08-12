@@ -1,17 +1,42 @@
 version: "3"
 services:
-  mysql:
-    image: mysql
-    container_name: mysql
-    environment:
-      MYSQL_DATABASE: c-campus
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_ROOT_HOST: '%'
+  myapp:
+    build: .
     ports:
-      - "3306:3306"
+      - "8080:8080"
+    restart: always
+    networks:
+      - app-tier
+    depends_on:
+      - redis
+
+#  mysql:
+#    image: mysql
+#    container_name: cc_mysql
+#    environment:
+#      MYSQL_DATABASE: c_campus
+#      MYSQL_USER: user
+#      MYSQL_PASSWORD: 1234
+#      MYSQL_ROOT_PASSWORD: 1234
+#      MYSQL_ROOT_HOST: '%'
+#    volumes:
+#      - mysql_data:/var/lib/mysql
+#    ports:
+#      - "3307:3306"
+#    networks:
+#      - app-tier
+#    tty: true
 
   redis:
     container_name: redis
     image: redis
     ports:
       - "6379:6379"
+    networks:
+      - app-tier
+
+networks:
+  app-tier:
+
+#volumes:
+#  mysql_data:

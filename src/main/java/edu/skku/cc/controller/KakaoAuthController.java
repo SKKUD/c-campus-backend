@@ -7,6 +7,7 @@ import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.service.KakaoAuthService;
 import edu.skku.cc.service.dto.KakaoTokenDto;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,22 +30,25 @@ public class KakaoAuthController {
     private String authRedirectUrl = "http://localhost:3000";
 
     @GetMapping("/oauth2/callback/kakao")
-    public @ResponseBody ResponseEntity kakaoCallback(String code, HttpServletResponse response) throws Exception {
+    public @ResponseBody ResponseEntity kakaoCallback(String code, HttpServletRequest request, HttpServletResponse response) throws Exception {
         JwtDto jwtDto = kakaoAuthService.kakaoLogin(code);
-        Cookie accessTokenCookie = new Cookie("accessToken", jwtDto.getAccessToken());
-        Cookie refreshTokenCookie = new Cookie("refreshToken", jwtDto.getRefreshToken());
-        accessTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setMaxAge(3600); // Cookie 1 expires after 1 hour
-        accessTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
-        refreshTokenCookie.setMaxAge(7200); // Cookie 2 expires after 2 hours
-        refreshTokenCookie.setPath("/");    // Cookie 2 is accessible to all paths
+        request.getSession().setAttribute("accessToken", jwtDto.getAccessToken());
+//        Cookie accessTokenCookie = new Cookie("accessToken", jwtDto.getAccessToken());
+//        Cookie refreshTokenCookie = new Cookie("refreshToken", jwtDto.getRefreshToken());
 
-        response.addCookie(accessTokenCookie);
-        response.addCookie(refreshTokenCookie);
+
+//        accessTokenCookie.setHttpOnly(true);
+//        refreshTokenCookie.setHttpOnly(true);
+//        accessTokenCookie.setMaxAge(3600); // Cookie 1 expires after 1 hour
+//        accessTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
+//        refreshTokenCookie.setMaxAge(7200); // Cookie 2 expires after 2 hours
+//        refreshTokenCookie.setPath("/");    // Cookie 2 is accessible to all paths
+
+//        response.addCookie(accessTokenCookie);
+//        response.addCookie(refreshTokenCookie);
 
         response.addHeader("Location", authRedirectUrl);
-        addSameSite(response, "Lax");
+//        addSameSite(response, "Lax");
 
         ResponseEntity responseEntity = ResponseEntity.status(HttpStatus.FOUND)
                 .body("redirecting to frontend");
