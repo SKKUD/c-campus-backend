@@ -50,10 +50,11 @@ public class KakaoAuthService {
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String REDIRECT_URI;
 
-    public KakaoTokenDto kakaoLogin(String code) throws Exception {
+    public JwtDto kakaoLogin(String code) throws Exception {
         KakaoTokenDto kakaoTokenDto = kakaoAuthenticate(code);
-        saveKakaoUserInfo(kakaoTokenDto);
-        return kakaoTokenDto;
+        User user = saveKakaoUserInfo(kakaoTokenDto);
+        JwtDto jwtDto = getAccessTokenAndRefreshToken(user);
+        return jwtDto;
     }
 
     public ResponseEntity<String> kakaoLogout() {
@@ -106,18 +107,14 @@ public class KakaoAuthService {
         return kakaoTokenDto;
     }
 
-    public void saveKakaoUserInfo(KakaoTokenDto kakaoTokenDto) throws Exception {
+    public User saveKakaoUserInfo(KakaoTokenDto kakaoTokenDto) throws Exception {
         KakaoUserInfoDto kakaoUserInfoDto = getKakaoUserInfo(kakaoTokenDto);
         User user = kakaoUserInfoDto.toEntity();
         User findUser = userRepository.findByEmail(user.getEmail());
         if (findUser == null) {
-            saveUser(user);
+            return userRepository.save(user);
         }
-    }
-
-    private void saveUser(User user) {
-        log.info("user {}", user);
-        userRepository.save(user);
+        return userRepository.save(findUser);
     }
 
     private KakaoUserInfoDto getKakaoUserInfo(KakaoTokenDto kakaoTokenDto) throws Exception {
@@ -187,12 +184,14 @@ public class KakaoAuthService {
 //        return findUser;
 //    }
 
-//    private JwtDto getAccessTokenAndRefreshToken(User user) {
-//        log.info("user {}", user.getId());
-//        String key = String.valueOf(user.getId());
-//        String accessToken = jwtTokenUtil.createAccessToken(key);
-//        String refreshToken = jwtTokenUtil.createRefreshToken();
-//        redisUtil.saveRefreshToken(key, refreshToken, jwtTokenUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
-//        return new JwtDto(accessToken, refreshToken);
-//    }
+    private JwtDto getAccessTokenAndRefreshToken(User user) {
+        log.info("user {}", user.getId());
+        String key = String.valueOf(user.getId());
+        String accessToken = jwtTokenUtil.createAccessToken(key);
+        String refreshToken = jwtTokenUtil.createRefreshToken();
+        log.info("key {}", key);
+        log.info("refreshToken {}", refreshToken);
+        redisUtil.saveRefreshToken(key, refreshToken, jwtTokenUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
+        return new JwtDto(accessToken, refreshToken);
+    }
 }

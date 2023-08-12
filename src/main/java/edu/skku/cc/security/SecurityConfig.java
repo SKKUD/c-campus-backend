@@ -30,6 +30,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+//                .cors(cors -> cors.disable())
                 .cors(c ->
                         c.configurationSource(corsConfigurationSource()
                         ))
@@ -44,7 +45,7 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session ->
                         session
-                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 )
                 .logout(AbstractHttpConfigurer::disable
                 )
