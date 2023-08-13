@@ -1,16 +1,15 @@
 package edu.skku.cc.jwt;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.skku.cc.exception.CustomException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -21,8 +20,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Optional;
 
 //expiration
 //invalid token
@@ -30,31 +29,17 @@ import java.util.LinkedHashMap;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class KakaoAuthenticationFilter extends OncePerRequestFilter {
+public class SessionAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenUtil jwtTokenUtil;
     private String TOKEN_VALIDATION_URL = "https://kapi.kakao.com/v1/user/access_token_info";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-//        String bearerToken = request.getHeader("Authorization");
-        String accessToken = String.valueOf(request.getSession().getAttribute("accessToken"));
-//        Cookie[] cookies = request.getCookies();
-//        if (cookies != null) {
-//            for (Cookie cookie : cookies) {
-//                System.out.println(cookie.getName());
-//                if (cookie.getName().equals("accessToken")) {
-//                    accessToken = cookie.getValue();
-//                }
-//            }
-//        }
-//        else {
-//            log.info("There is no cookie");
-//        }
+        Optional<Object> optionalUserId = Optional.ofNullable(request.getSession().getAttribute("userId"));
 
-        log.info("accessToken value: {}", accessToken);
-
-        if (StringUtils.hasText(accessToken) && jwtTokenUtil.validateToken(accessToken)) {
-            Authentication authentication = jwtTokenUtil.getAuthenticationFromToken(accessToken);
+        if (optionalUserId.isPresent()) {
+            log.info("optionalUserId.get() {}", optionalUserId.get());
+            Authentication authentication = new UsernamePasswordAuthenticationToken(optionalUserId.get(), "");
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.info("{} saved", authentication.getPrincipal());
         }
@@ -62,6 +47,7 @@ public class KakaoAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             log.info("Filter chain success");
         } catch (CustomException e) {
+            log.info("CustomException e {}", e);
             String jsonString = createErrorResponse(e);
             response.setCharacterEncoding("UTF-8");
             response.setContentType("application/json");

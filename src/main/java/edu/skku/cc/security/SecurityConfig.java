@@ -1,6 +1,6 @@
 package edu.skku.cc.security;
 
-import edu.skku.cc.jwt.KakaoAuthenticationFilter;
+import edu.skku.cc.jwt.SessionAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +23,7 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private final KakaoAuthenticationFilter kakaoAuthenticationFilter;
+    private final SessionAuthenticationFilter sessionAuthenticationFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Bean
@@ -54,7 +54,7 @@ public class SecurityConfig {
                                 authenticationEntryPoint(customAuthenticationEntryPoint)
                 )
                 .addFilterBefore(
-                        kakaoAuthenticationFilter, UsernamePasswordAuthenticationFilter.class
+                        sessionAuthenticationFilter, UsernamePasswordAuthenticationFilter.class
                 );
 
         return http.build();

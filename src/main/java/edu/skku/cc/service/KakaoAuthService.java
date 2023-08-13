@@ -50,11 +50,10 @@ public class KakaoAuthService {
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String REDIRECT_URI;
 
-    public JwtDto kakaoLogin(String code) throws Exception {
+    public Long kakaoLogin(String code) throws Exception {
         KakaoTokenDto kakaoTokenDto = kakaoAuthenticate(code);
         User user = saveKakaoUserInfo(kakaoTokenDto);
-        JwtDto jwtDto = getAccessTokenAndRefreshToken(user);
-        return jwtDto;
+        return user.getId();
     }
 
     public ResponseEntity<String> kakaoLogout() {
@@ -62,7 +61,6 @@ public class KakaoAuthService {
 
         String logoutRedirectUrl = "http://localhost:8080";
         String kakaoLogoutUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + CLIENT_ID + "&logout_redirect_uri=" + logoutRedirectUrl;
-
         ResponseEntity<String> responseEntity = rt.getForEntity(kakaoLogoutUrl, String.class);
         return responseEntity;
     }
