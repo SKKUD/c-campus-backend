@@ -1,27 +1,45 @@
 package edu.skku.cc.controller;
 
 import edu.skku.cc.dto.auth.AuthenticationResponseDto;
+import edu.skku.cc.jwt.JwtTokenUtil;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import software.amazon.awssdk.http.HttpStatusCode;
 
 @Controller
+@RequiredArgsConstructor
 @Slf4j
 public class AuthController {
+
+    private final JwtTokenUtil jwtTokenUtil;
+
     @GetMapping("/auth/authentication")
     public ResponseEntity<AuthenticationResponseDto> checkAuthentication(HttpServletRequest request, Authentication authentication) {
-        HttpSession session = request.getSession(false);
-        log.info("session {}", session.getAttribute("userId"));
-        if (session != null && authentication != null) {
-            String userId = String.valueOf(authentication.getPrincipal());
-            return ResponseEntity.status(HttpStatusCode.OK).body(new AuthenticationResponseDto(Long.parseLong(userId)));
-        } else {
-            return ResponseEntity.status(HttpStatusCode.OK).body(new AuthenticationResponseDto(null));
+        String accessToken = null;
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                System.out.println(cookie.getName());
+                if (cookie.getName().equals("accessToken")) {
+                    accessToken = cookie.getValue();
+                }
+            }
         }
+
+        if (StringUtils.hasText(accessToken) && jwtTokenUtil.validateToken(accessToken)) {
+            String stringUserId = String.valueOf(authentication.getPrincipal());
+            return ResponseEntity.status(HttpStatusCode.OK).body(new AuthenticationResponseDto(Long.parseLong(stringUserId)));
+        }
+
+        return ResponseEntity.status(HttpStatusCode.OK).body(new AuthenticationResponseDto(null));
     }
 }

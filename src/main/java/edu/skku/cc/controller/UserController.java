@@ -1,7 +1,7 @@
 package edu.skku.cc.controller;
 
 import edu.skku.cc.domain.User;
-import edu.skku.cc.dto.kakaoUser.UserResponseDto;
+import edu.skku.cc.dto.user.UserResponseDto;
 import edu.skku.cc.service.KakaoAuthService;
 import edu.skku.cc.service.UserService;
 import lombok.RequiredArgsConstructor;
