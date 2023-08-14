@@ -1,12 +1,13 @@
-package edu.skku.cc.dto.auth;
+package edu.skku.cc.dto.kakaoUser;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class AuthenticationResponseDto {
+@AllArgsConstructor
+public class UserResponseDto {
     private Long userId;
+    private String nickname;
 }

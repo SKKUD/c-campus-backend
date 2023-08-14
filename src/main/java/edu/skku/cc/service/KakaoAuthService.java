@@ -1,6 +1,7 @@
 package edu.skku.cc.service;
 
 import edu.skku.cc.domain.User;
+import edu.skku.cc.dto.auth.KakaoLoginSuccessDto;
 import edu.skku.cc.dto.auth.KakaoUserInfoDto;
 import edu.skku.cc.dto.jwt.JwtDto;
 import edu.skku.cc.jwt.JwtTokenUtil;
@@ -50,10 +51,10 @@ public class KakaoAuthService {
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String REDIRECT_URI;
 
-    public Long kakaoLogin(String code) throws Exception {
+    public KakaoLoginSuccessDto kakaoLogin(String code) throws Exception {
         KakaoTokenDto kakaoTokenDto = kakaoAuthenticate(code);
         User user = saveKakaoUserInfo(kakaoTokenDto);
-        return user.getId();
+        return new KakaoLoginSuccessDto(user.getId(), kakaoTokenDto.getAccessToken());
     }
 
     public ResponseEntity<String> kakaoLogout() {
@@ -134,14 +135,17 @@ public class KakaoAuthService {
         JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
         JSONObject account = (JSONObject) jsonObject.get("kakao_account");
         JSONObject profile = (JSONObject) account.get("profile");
+        log.info("account {}", account);
+        log.info("profile {}", profile);
 
         String nickname = String.valueOf(profile.get("nickname"));
         String email = String.valueOf(account.get("email"));
+        String profileImageUrl = String.valueOf(profile.get("profile_image_url"));
 
         log.info("nickname {}", nickname);
         log.info("email {}", email);
 
-        return new KakaoUserInfoDto(nickname, email);
+        return new KakaoUserInfoDto(nickname, email, profileImageUrl);
     }
 
     public KakaoAccessTokenDto getNewKakaoAccessToken(String refreshToken) throws Exception{

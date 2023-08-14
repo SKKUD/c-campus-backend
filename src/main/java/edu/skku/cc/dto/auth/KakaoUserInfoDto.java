@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 public class KakaoUserInfoDto {
     private String nickname;
     private String email;
+    private String profileImageUrl;
 
     public User toEntity() {
         return new User(nickname, email);

@@ -1,5 +1,6 @@
 package edu.skku.cc.controller;
 
+import edu.skku.cc.dto.auth.KakaoLoginSuccessDto;
 import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.service.KakaoAuthService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,10 +25,11 @@ public class KakaoAuthController {
 
     @GetMapping("/oauth2/callback/kakao")
     public @ResponseBody ResponseEntity kakaoCallback(String code, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Long userId = kakaoAuthService.kakaoLogin(code);
-        request.getSession().setAttribute("userId", userId);
+        KakaoLoginSuccessDto kakaoLoginSuccessDto = kakaoAuthService.kakaoLogin(code);
+        request.getSession().setAttribute("userId", kakaoLoginSuccessDto.getUserId());
+        request.getSession().setAttribute("kakaoAccessToken", kakaoLoginSuccessDto.getKakaoAccessToken());
 
-        response.addHeader("Location", authRedirectUrl);
+        response.addHeader("Location", authRedirectUrl + "/" + kakaoLoginSuccessDto.getUserId());
         ResponseEntity responseEntity = ResponseEntity.status(HttpStatus.FOUND)
                 .body("redirecting to frontend");
         return responseEntity;

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class AuthenticationResponseDto {
+public class KakaoLoginSuccessDto {
     private Long userId;
+    private String kakaoAccessToken;
 }
