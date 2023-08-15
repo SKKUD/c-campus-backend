@@ -1,11 +1,8 @@
 package edu.skku.cc.controller;
 
-import edu.skku.cc.dto.jwt.JwtDto;
-import edu.skku.cc.enums.JwtExpirationTime;
-import edu.skku.cc.jwt.KakaoAuthenticationFilter;
+import edu.skku.cc.dto.jwt.KakaoLoginSuccessDto;
 import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.service.KakaoAuthService;
-import edu.skku.cc.service.dto.KakaoTokenDto;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,11 +10,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.Collection;
 
@@ -31,33 +25,32 @@ public class KakaoAuthController {
 
     @GetMapping("/oauth2/callback/kakao")
     public @ResponseBody ResponseEntity kakaoCallback(String code, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        JwtDto jwtDto = kakaoAuthService.kakaoLogin(code);
-        request.getSession().setAttribute("accessToken", jwtDto.getAccessToken());
-//        Cookie accessTokenCookie = new Cookie("accessToken", jwtDto.getAccessToken());
-//        Cookie refreshTokenCookie = new Cookie("refreshToken", jwtDto.getRefreshToken());
+        KakaoLoginSuccessDto kakaoLoginSuccessDto = kakaoAuthService.kakaoLogin(code);
+        Cookie accessTokenCookie = new Cookie("accessToken", kakaoLoginSuccessDto.getAccessToken());
 
 
-//        accessTokenCookie.setHttpOnly(true);
-//        refreshTokenCookie.setHttpOnly(true);
-//        accessTokenCookie.setMaxAge(3600); // Cookie 1 expires after 1 hour
-//        accessTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
-//        refreshTokenCookie.setMaxAge(7200); // Cookie 2 expires after 2 hours
-//        refreshTokenCookie.setPath("/");    // Cookie 2 is accessible to all paths
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setMaxAge(3600); // Cookie 1 expires after 1 hour
+        accessTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
 
-//        response.addCookie(accessTokenCookie);
-//        response.addCookie(refreshTokenCookie);
+        response.addCookie(accessTokenCookie);
 
-        response.addHeader("Location", authRedirectUrl);
-//        addSameSite(response, "Lax");
+        response.addHeader("Location", authRedirectUrl + "/" + kakaoLoginSuccessDto.getUserId());
 
         ResponseEntity responseEntity = ResponseEntity.status(HttpStatus.FOUND)
                 .body("redirecting to frontend");
         return responseEntity;
     }
-    
+
     @PostMapping("/oauth2/kakao/logout")
-    public @ResponseBody ResponseEntity kakaoLogout() {
+    public @ResponseBody ResponseEntity kakaoLogout(HttpServletRequest request) {
         ResponseEntity re = kakaoAuthService.kakaoLogout();
+        Cookie[] cookies = request.getCookies();
+        for (Cookie cookie : cookies) {
+            if (cookie.getName() == "accessToken") {
+                cookie.setMaxAge(0);
+            }
+        }
         log.info("logout response {}", re);
         return re;
     }

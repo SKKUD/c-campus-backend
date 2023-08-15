@@ -2,13 +2,12 @@ package edu.skku.cc.service;
 
 import edu.skku.cc.domain.User;
 import edu.skku.cc.dto.auth.KakaoUserInfoDto;
-import edu.skku.cc.dto.jwt.JwtDto;
+import edu.skku.cc.dto.jwt.KakaoLoginSuccessDto;
 import edu.skku.cc.jwt.JwtTokenUtil;
 import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.redis.RedisUtil;
 import edu.skku.cc.repository.UserRepository;
 import edu.skku.cc.service.dto.KakaoTokenDto;
-import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
@@ -22,11 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -50,11 +46,11 @@ public class KakaoAuthService {
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String REDIRECT_URI;
 
-    public JwtDto kakaoLogin(String code) throws Exception {
+    public KakaoLoginSuccessDto kakaoLogin(String code) throws Exception {
         KakaoTokenDto kakaoTokenDto = kakaoAuthenticate(code);
         User user = saveKakaoUserInfo(kakaoTokenDto);
-        JwtDto jwtDto = getAccessTokenAndRefreshToken(user);
-        return jwtDto;
+        KakaoLoginSuccessDto kakaoLoginSuccessDto = getAccessTokenAndRefreshToken(user);
+        return kakaoLoginSuccessDto;
     }
 
     public ResponseEntity<String> kakaoLogout() {
@@ -184,7 +180,7 @@ public class KakaoAuthService {
 //        return findUser;
 //    }
 
-    private JwtDto getAccessTokenAndRefreshToken(User user) {
+    private KakaoLoginSuccessDto getAccessTokenAndRefreshToken(User user) {
         log.info("user {}", user.getId());
         String key = String.valueOf(user.getId());
         String accessToken = jwtTokenUtil.createAccessToken(key);
@@ -192,6 +188,6 @@ public class KakaoAuthService {
         log.info("key {}", key);
         log.info("refreshToken {}", refreshToken);
         redisUtil.saveRefreshToken(key, refreshToken, jwtTokenUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
-        return new JwtDto(accessToken, refreshToken);
+        return new KakaoLoginSuccessDto(user.getId(), accessToken, refreshToken);
     }
 }
