@@ -43,8 +43,14 @@ public class KakaoAuthController {
     }
     
     @PostMapping("/oauth2/kakao/logout")
-    public @ResponseBody ResponseEntity kakaoLogout() {
+    public @ResponseBody ResponseEntity kakaoLogout(HttpServletRequest request) {
         ResponseEntity re = kakaoAuthService.kakaoLogout();
+        Cookie[] cookies = request.getCookies();
+        for (Cookie cookie : cookies) {
+            if (cookie.getName() == "accessToken") {
+                cookie.setMaxAge(0);
+            }
+        }
         log.info("logout response {}", re);
         return re;
     }
