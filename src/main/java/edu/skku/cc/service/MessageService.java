@@ -139,21 +139,16 @@ public class MessageService {
         // 5개 미만인 경우
         if (messageList.stream().filter(message -> !message.getIsPulled()).count() < 5) {
             throw new CustomException(ErrorType.INVALID_PULL_REQUEST_EXCEPTION);
-        } else { // 5개 이상인 경우 5개 단위로 pull
+        } else { // 5개 이상인 경우 가장 먼저 들어온 5개 pull
             List<Message> unpulledMessageList = messageList.stream()
                     .filter(message -> !message.getIsPulled())
                     .sorted(Comparator.comparing(BaseTimeEntity::getCreatedAt))
                     .toList();
 
-            int len = unpulledMessageList.size();
-            int pullCount = len / 5;
-
-            for (int i = 0; i < pullCount; i++) {
-                for (int j = 0; j < 5; j++) {
-                    unpulledMessageList.get(i * 5 + j).pullMessage();
-                }
+            for (int i = 0; i < 5; i++) {
+                unpulledMessageList.get(i).pullMessage();
             }
-            return pullCount * 5;
+            return 5;
         }
     }
 
