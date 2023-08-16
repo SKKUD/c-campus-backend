@@ -56,7 +56,7 @@ public class KakaoAuthService {
     public ResponseEntity<String> kakaoLogout() {
         RestTemplate rt = new RestTemplate();
 
-        String logoutRedirectUrl = "http://localhost:8080";
+        String logoutRedirectUrl = "http://localhost:3000";
         String kakaoLogoutUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + CLIENT_ID + "&logout_redirect_uri=" + logoutRedirectUrl;
 
         ResponseEntity<String> responseEntity = rt.getForEntity(kakaoLogoutUrl, String.class);

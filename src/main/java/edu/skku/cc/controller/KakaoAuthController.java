@@ -1,5 +1,6 @@
 package edu.skku.cc.controller;
 
+import edu.skku.cc.dto.auth.LogoutResponseDto;
 import edu.skku.cc.dto.jwt.KakaoLoginSuccessDto;
 import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.service.KakaoAuthService;
@@ -12,6 +13,7 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.HttpClientErrorException;
+import software.amazon.awssdk.http.HttpStatusCode;
 
 import java.util.Collection;
 
@@ -26,13 +28,11 @@ public class KakaoAuthController {
     @GetMapping("/oauth2/callback/kakao")
     public @ResponseBody ResponseEntity kakaoCallback(String code, HttpServletRequest request, HttpServletResponse response) throws Exception {
         KakaoLoginSuccessDto kakaoLoginSuccessDto = kakaoAuthService.kakaoLogin(code);
+
         Cookie accessTokenCookie = new Cookie("accessToken", kakaoLoginSuccessDto.getAccessToken());
-
-
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setMaxAge(3600); // Cookie 1 expires after 1 hour
         accessTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
-
         response.addCookie(accessTokenCookie);
 
         response.addHeader("Location", authRedirectUrl + "/" + kakaoLoginSuccessDto.getUserId());
@@ -43,16 +43,16 @@ public class KakaoAuthController {
     }
 
     @PostMapping("/oauth2/kakao/logout")
-    public @ResponseBody ResponseEntity kakaoLogout(HttpServletRequest request) {
-        ResponseEntity re = kakaoAuthService.kakaoLogout();
-        Cookie[] cookies = request.getCookies();
-        for (Cookie cookie : cookies) {
-            if (cookie.getName() == "accessToken") {
-                cookie.setMaxAge(0);
-            }
-        }
-        log.info("logout response {}", re);
-        return re;
+    public @ResponseBody ResponseEntity kakaoLogout(HttpServletRequest request, HttpServletResponse response) {
+//        ResponseEntity re = kakaoAuthService.kakaoLogout();
+        Cookie cookie = new Cookie("accessToken", "");
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+//        response.addHeader("Location", authRedirectUrl);
+        ResponseEntity responseEntity = ResponseEntity.status(HttpStatusCode.OK)
+                .body(new LogoutResponseDto("로그아웃 되었습니다."));
+        return responseEntity;
     }
 
     @PostMapping("/oauth2/kakao/refresh")

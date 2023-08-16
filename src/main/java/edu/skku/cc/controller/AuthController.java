@@ -37,7 +37,11 @@ public class AuthController {
 
         if (StringUtils.hasText(accessToken) && jwtTokenUtil.validateToken(accessToken)) {
             String stringUserId = String.valueOf(authentication.getPrincipal());
-            return ResponseEntity.status(HttpStatusCode.OK).body(new AuthenticationResponseDto(Long.parseLong(stringUserId)));
+            try {
+                return ResponseEntity.status(HttpStatusCode.OK).body(new AuthenticationResponseDto(Long.parseLong(stringUserId)));
+            } catch (NumberFormatException e) {
+                return ResponseEntity.status(HttpStatusCode.OK).body(new AuthenticationResponseDto(null));
+            }
         }
 
         return ResponseEntity.status(HttpStatusCode.OK).body(new AuthenticationResponseDto(null));
