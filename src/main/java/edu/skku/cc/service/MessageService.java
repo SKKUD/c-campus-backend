@@ -191,7 +191,7 @@ public class MessageService {
 
     @Transactional
     public Long createMessage(Long userId, CreateMessageRequestDto request, MultipartFile file) {
-        if (file.getContentType() != null && !file.getContentType().startsWith("image")) {
+        if (file != null && !file.getContentType().startsWith("image")) {
             throw new CustomException(ErrorType.INVALID_FILE_TYPE_EXCEPTION);
         }
 
@@ -209,7 +209,7 @@ public class MessageService {
                 .isPublic(false)
                 .build();
 
-        if (!file.isEmpty()) {
+        if (file != null) {
             UUID uuid = UUID.randomUUID(); // UUID for s3 file name
 
             PutObjectRequest putObjectRequest = PutObjectRequest.builder()
