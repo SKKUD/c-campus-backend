@@ -1,7 +1,10 @@
 package edu.skku.cc.controller;
 
 import edu.skku.cc.dto.auth.LogoutResponseDto;
+import edu.skku.cc.dto.jwt.AccessTokenResponseDto;
 import edu.skku.cc.dto.jwt.KakaoLoginSuccessDto;
+import edu.skku.cc.exception.CustomException;
+import edu.skku.cc.exception.ErrorType;
 import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.service.KakaoAuthService;
 import jakarta.servlet.http.Cookie;
@@ -30,10 +33,17 @@ public class KakaoAuthController {
         KakaoLoginSuccessDto kakaoLoginSuccessDto = kakaoAuthService.kakaoLogin(code);
 
         Cookie accessTokenCookie = new Cookie("accessToken", kakaoLoginSuccessDto.getAccessToken());
+        Cookie refreshTokenCookie = new Cookie("refreshToken", kakaoLoginSuccessDto.getRefreshToken());
+
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setMaxAge(3600); // Cookie 1 expires after 1 hour
         accessTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setMaxAge(7200); // Cookie 1 expires after 1 hour
+        refreshTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
+
         response.addCookie(accessTokenCookie);
+        response.addCookie(refreshTokenCookie);
 
         response.addHeader("Location", authRedirectUrl + "/" + kakaoLoginSuccessDto.getUserId());
 
@@ -55,14 +65,27 @@ public class KakaoAuthController {
         return responseEntity;
     }
 
-    @PostMapping("/oauth2/kakao/refresh")
-    public @ResponseBody ResponseEntity kakaoRefresh(@RequestParam("refresh_token") String refreshToken) throws Exception{
-        try {
-            KakaoAccessTokenDto newAccessToken = kakaoAuthService.getNewKakaoAccessToken(refreshToken);
-            return ResponseEntity.ok().body(newAccessToken);
-        } catch (HttpClientErrorException.BadRequest e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+    @PostMapping("/auth/refresh")
+    public @ResponseBody ResponseEntity refreshAccessToken(HttpServletRequest request, HttpServletResponse response) throws Exception{
+        String refreshToken = null;
+
+        Cookie[] cookies = request.getCookies();
+        for (Cookie cookie : cookies) {
+            if (cookie.getName().equals("refreshToken")) {
+                refreshToken = cookie.getValue();
+            }
         }
+        String newAccessToken = kakaoAuthService.getNewAccessToken(refreshToken);
+        if (newAccessToken == null) {
+            throw new CustomException(ErrorType.INVALID_TOKEN_EXCEPTION);
+        }
+        Cookie accessTokenCookie = new Cookie("accessToken", newAccessToken);
+        log.info("new token {}", newAccessToken);
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setMaxAge(3600); // Cookie 1 expires after 1 hour
+        accessTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
+        response.addCookie(accessTokenCookie);
+        return ResponseEntity.ok().body(new AccessTokenResponseDto("토큰이 재발급되었습니다."));
     }
 
     private void addSameSite(HttpServletResponse response, String sameSite) {
