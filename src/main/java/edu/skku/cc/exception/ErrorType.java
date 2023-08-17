@@ -23,7 +23,7 @@ public enum ErrorType {
      * 401 UNAUTHORIZED
      */
     UNAUTHORIZED_USER_EXCEPTION(HttpStatus.UNAUTHORIZED, "접근 권한이 없는 유저입니다."),
-
+    INVALID_TOKEN_EXCEPTION(HttpStatus.UNAUTHORIZED, "만료된 JWT 토큰입니다."),
 
     /**
      * 404 NOT FOUND

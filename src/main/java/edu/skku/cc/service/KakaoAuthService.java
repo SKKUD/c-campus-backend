@@ -56,7 +56,7 @@ public class KakaoAuthService {
     public ResponseEntity<String> kakaoLogout() {
         RestTemplate rt = new RestTemplate();
 
-        String logoutRedirectUrl = "http://localhost:8080";
+        String logoutRedirectUrl = "http://localhost:3000";
         String kakaoLogoutUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + CLIENT_ID + "&logout_redirect_uri=" + logoutRedirectUrl;
 
         ResponseEntity<String> responseEntity = rt.getForEntity(kakaoLogoutUrl, String.class);
@@ -142,52 +142,24 @@ public class KakaoAuthService {
         return new KakaoUserInfoDto(nickname, email);
     }
 
-    public KakaoAccessTokenDto getNewKakaoAccessToken(String refreshToken) throws Exception{
-        RestTemplate rt = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        JSONParser jsonParser = new JSONParser();
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-
-        params.add("grant_type", "refresh_token");
-        params.add("client_id", CLIENT_ID);
-        log.info("refresh token {}", refreshToken);
-        params.add("refresh_token", refreshToken);
-        params.add("client_secret", CLIENT_SECRET);
-
-
-        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(params, headers);
-
-        ResponseEntity<String> response = rt.exchange(TOKEN_URL, HttpMethod.POST, httpEntity, String.class);
-
-        JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
-        String kakaoAccessToken = String.valueOf(jsonObject.get("access_token"));
-        return new KakaoAccessTokenDto(kakaoAccessToken);
+    public String getNewAccessToken(String refreshToken) throws Exception{
+        String userId = redisUtil.validateRefreshToken(refreshToken);
+        log.info("refreshToken userId {}", userId);
+        if (userId == null) {
+            return null;
+        }
+        String accessToken = jwtTokenUtil.createAccessToken(userId);
+        return accessToken;
     }
-
-//    private User synchronizeUser(KakaoUserInfoDto kakaoUserInfoDto) {
-//        User user = kakaoUserInfoDto.toEntity();
-//        log.info("user.getId() {}", user.getId());
-//        log.info("user.getName() {}", user.getName());
-//        log.info("user.getEmail() {}", user.getEmail());
-//        User findUser = userRepository.findByEmail(user.getEmail());
-//        if (findUser == null) {
-//            log.info("findUser {}", findUser);
-//            userRepository.save(user);
-//            return user;
-//        }
-//        return findUser;
-//    }
 
     private KakaoLoginSuccessDto getAccessTokenAndRefreshToken(User user) {
         log.info("user {}", user.getId());
-        String key = String.valueOf(user.getId());
-        String accessToken = jwtTokenUtil.createAccessToken(key);
+        String userId = String.valueOf(user.getId());
+        String accessToken = jwtTokenUtil.createAccessToken(userId);
         String refreshToken = jwtTokenUtil.createRefreshToken();
-        log.info("key {}", key);
+        log.info("userId {}", userId);
         log.info("refreshToken {}", refreshToken);
-        redisUtil.saveRefreshToken(key, refreshToken, jwtTokenUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
+        redisUtil.saveRefreshToken(refreshToken, userId, jwtTokenUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
         return new KakaoLoginSuccessDto(user.getId(), accessToken, refreshToken);
     }
 }
