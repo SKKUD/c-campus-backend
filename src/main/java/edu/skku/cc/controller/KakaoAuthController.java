@@ -27,6 +27,8 @@ public class KakaoAuthController {
 
     private final KakaoAuthService kakaoAuthService;
     private String authRedirectUrl = "http://localhost:3000";
+    private final int accessTokenCookieMaxAge = 60 * 30; // 30 mins
+    private final int refreshTokenCookieMaxAge = 60 * 60 * 24 * 7; // 7 days
 
     @GetMapping("/oauth2/callback/kakao")
     public @ResponseBody ResponseEntity kakaoCallback(String code, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -36,10 +38,10 @@ public class KakaoAuthController {
         Cookie refreshTokenCookie = new Cookie("refreshToken", kakaoLoginSuccessDto.getRefreshToken());
 
         accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setMaxAge(3600); // Cookie 1 expires after 1 hour
+        accessTokenCookie.setMaxAge(accessTokenCookieMaxAge); // Cookie 1 expires after 1 hour
         accessTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
         refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setMaxAge(7200); // Cookie 1 expires after 1 hour
+        refreshTokenCookie.setMaxAge(refreshTokenCookieMaxAge); // Cookie 1 expires after 1 hour
         refreshTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
 
         response.addCookie(accessTokenCookie);
@@ -55,10 +57,16 @@ public class KakaoAuthController {
     @PostMapping("/oauth2/kakao/logout")
     public @ResponseBody ResponseEntity kakaoLogout(HttpServletRequest request, HttpServletResponse response) {
 //        ResponseEntity re = kakaoAuthService.kakaoLogout();
-        Cookie cookie = new Cookie("accessToken", "");
-        cookie.setMaxAge(0);
-        cookie.setPath("/");
-        response.addCookie(cookie);
+        Cookie accessTokenCookie = new Cookie("accessToken", "");
+        Cookie refreshTokenCookie = new Cookie("refreshToken", "");
+        accessTokenCookie.setHttpOnly(true);
+        accessTokenCookie.setMaxAge(0);
+        accessTokenCookie.setPath("/");
+        refreshTokenCookie.setHttpOnly(true);
+        refreshTokenCookie.setMaxAge(0);
+        refreshTokenCookie.setPath("/");
+        response.addCookie(accessTokenCookie);
+        response.addCookie(refreshTokenCookie);
 //        response.addHeader("Location", authRedirectUrl);
         ResponseEntity responseEntity = ResponseEntity.status(HttpStatusCode.OK)
                 .body(new LogoutResponseDto("로그아웃 되었습니다."));
@@ -82,7 +90,7 @@ public class KakaoAuthController {
         Cookie accessTokenCookie = new Cookie("accessToken", newAccessToken);
         log.info("new token {}", newAccessToken);
         accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setMaxAge(3600); // Cookie 1 expires after 1 hour
+        accessTokenCookie.setMaxAge(accessTokenCookieMaxAge); // Cookie 1 expires after 1 hour
         accessTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
         response.addCookie(accessTokenCookie);
         return ResponseEntity.ok().body(new AccessTokenResponseDto("토큰이 재발급되었습니다."));
