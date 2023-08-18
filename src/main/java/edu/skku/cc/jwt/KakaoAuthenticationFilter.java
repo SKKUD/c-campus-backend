@@ -57,6 +57,9 @@ public class KakaoAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.info("{} saved", authentication.getPrincipal());
         }
+        else {
+            SecurityContextHolder.clearContext();
+        }
         try {
             filterChain.doFilter(request, response);
             log.info("Filter chain success");
