@@ -21,6 +21,11 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private ProfileImage profileImage;
+
+    private String profileImageUuid;
+
     @Column(nullable = false)
     private String name;
 

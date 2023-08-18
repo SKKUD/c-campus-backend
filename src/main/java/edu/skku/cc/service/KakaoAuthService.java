@@ -22,7 +22,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -34,6 +41,8 @@ public class KakaoAuthService {
     private final UserRepository userRepository;
     private final JwtTokenUtil jwtTokenUtil;
     private final RedisUtil redisUtil;
+    private final S3Client s3Client;
+
 
     @Value("${spring.security.oauth2.client.provider.kakao.user-info-uri}")
     private String USER_INFO_URL;
@@ -45,6 +54,11 @@ public class KakaoAuthService {
     private String CLIENT_SECRET;
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String REDIRECT_URI;
+    @Value("${aws.s3.bucket}")
+    private String BUCKET_NAME;
+
+    @Value("${aws.s3.region}")
+    private String REGION;
 
     public KakaoLoginSuccessDto kakaoLogin(String code) throws Exception {
         KakaoTokenDto kakaoTokenDto = kakaoAuthenticate(code);
@@ -133,13 +147,33 @@ public class KakaoAuthService {
         JSONObject account = (JSONObject) jsonObject.get("kakao_account");
         JSONObject profile = (JSONObject) account.get("profile");
 
+        log.info("profile {}", profile);
+
         String nickname = String.valueOf(profile.get("nickname"));
+        String profileImageUrl = String.valueOf(profile.get("profile_image_url"));
         String email = String.valueOf(account.get("email"));
 
         log.info("nickname {}", nickname);
         log.info("email {}", email);
+        log.info("profile_image_url {}", profileImageUrl);
 
-        return new KakaoUserInfoDto(nickname, email);
+        URL url = new URL(profileImageUrl);
+        InputStream inputStream = url.openStream();
+
+        UUID uuid = UUID.randomUUID();
+        try {
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(BUCKET_NAME)
+                    .key(uuid.toString())
+                    .build();
+
+            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(inputStream, url.openConnection().getContentLength()));
+        } catch(IOException e) {
+            e.printStackTrace();
+        } finally {
+            s3Client.close();
+        }
+        return new KakaoUserInfoDto(nickname, email, uuid);
     }
 
     public String getNewAccessToken(String refreshToken) throws Exception{
