@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -21,10 +22,10 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private ProfileImage profileImage;
-
+    @Column(nullable = false)
     private String profileImageUuid;
+    @Column(nullable = false)
+    private String profileImageUrl;
 
     @Column(nullable = false)
     private String name;
@@ -35,14 +36,23 @@ public class User extends BaseTimeEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Photo> photos;
 
-    public User(String name, String email) {
+    public User(String name, String email, String profileImageUrl) {
         this.name = name;
         this.email = email;
+        this.profileImageUrl = profileImageUrl;
     }
 
     public void addPhoto(Photo photo) {
         photo.setUser(this);
         photos.add(photo);
+    }
+
+    public void saveProfileImageUuid(String profileImageUuid) {
+        this.profileImageUuid = profileImageUuid;
+    }
+
+    public void saveProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
 
     public Integer getMessageCount() {

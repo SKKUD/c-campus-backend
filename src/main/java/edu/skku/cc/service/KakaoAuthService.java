@@ -4,7 +4,6 @@ import edu.skku.cc.domain.User;
 import edu.skku.cc.dto.auth.KakaoUserInfoDto;
 import edu.skku.cc.dto.jwt.KakaoLoginSuccessDto;
 import edu.skku.cc.jwt.JwtTokenUtil;
-import edu.skku.cc.jwt.dto.KakaoAccessTokenDto;
 import edu.skku.cc.redis.RedisUtil;
 import edu.skku.cc.repository.UserRepository;
 import edu.skku.cc.service.dto.KakaoTokenDto;
@@ -24,11 +23,12 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -120,13 +120,61 @@ public class KakaoAuthService {
     public User saveKakaoUserInfo(KakaoTokenDto kakaoTokenDto) throws Exception {
         KakaoUserInfoDto kakaoUserInfoDto = getKakaoUserInfo(kakaoTokenDto);
         User user = kakaoUserInfoDto.toEntity();
+
         User findUser = userRepository.findByEmail(user.getEmail());
         if (findUser == null) {
+            log.info("create new image");
+            UUID profileImageUuid = saveImageInS3(kakaoUserInfoDto.getProfileImageUrl());
+            user.saveProfileImageUuid(profileImageUuid.toString());
             return userRepository.save(user);
         }
+        if (!(findUser.getProfileImageUrl().equals(kakaoUserInfoDto.getProfileImageUrl()))) {
+            log.info("findUser's image {}", findUser.getProfileImageUrl());
+            log.info("kakaoUserInfoDto's image {}", kakaoUserInfoDto.getProfileImageUrl());
+            log.info("delete image");
+            deleteImageInS3(findUser.getProfileImageUuid());
+            UUID profileImageUuid = saveImageInS3(kakaoUserInfoDto.getProfileImageUrl());
+            findUser.saveProfileImageUuid(profileImageUuid.toString());
+            findUser.saveProfileImageUrl(kakaoUserInfoDto.getProfileImageUrl());
+            return userRepository.save(findUser);
+        }
+        log.info("normal");
         return userRepository.save(findUser);
+
+        // s3에서 uuid로 탐색 후 삭제 -> 새로 저장
+
     }
 
+    private void deleteImageInS3(String profileImageUuid) {
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(BUCKET_NAME)
+                .key(profileImageUuid)
+                .build();
+        s3Client.deleteObject(deleteObjectRequest);
+    }
+    private UUID saveImageInS3(String profileImageUrl) {
+        try {
+        URL url = new URL(profileImageUrl);
+        InputStream inputStream = url.openStream();
+        byte[] imageData = inputStream.readAllBytes();
+        inputStream.close();
+
+        log.info("imageData {}", imageData);
+
+        UUID profileImageUuid = UUID.randomUUID();
+
+        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                .bucket(BUCKET_NAME)
+                .key(profileImageUuid.toString())
+                .build();
+        s3Client.putObject(putObjectRequest, RequestBody.fromByteBuffer(ByteBuffer.wrap(imageData)));
+
+        return profileImageUuid;
+        } catch(Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     private KakaoUserInfoDto getKakaoUserInfo(KakaoTokenDto kakaoTokenDto) throws Exception {
         RestTemplate rt = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -157,23 +205,7 @@ public class KakaoAuthService {
         log.info("email {}", email);
         log.info("profile_image_url {}", profileImageUrl);
 
-        URL url = new URL(profileImageUrl);
-        InputStream inputStream = url.openStream();
-
-        UUID uuid = UUID.randomUUID();
-        try {
-            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                    .bucket(BUCKET_NAME)
-                    .key(uuid.toString())
-                    .build();
-
-            s3Client.putObject(putObjectRequest, RequestBody.fromInputStream(inputStream, url.openConnection().getContentLength()));
-        } catch(IOException e) {
-            e.printStackTrace();
-        } finally {
-            s3Client.close();
-        }
-        return new KakaoUserInfoDto(nickname, email, uuid);
+        return new KakaoUserInfoDto(nickname, email, profileImageUrl);
     }
 
     public String getNewAccessToken(String refreshToken) throws Exception{

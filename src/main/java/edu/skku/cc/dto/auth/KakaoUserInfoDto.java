@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -14,6 +16,6 @@ public class KakaoUserInfoDto {
     private String profileImageUrl;
 
     public User toEntity() {
-        return new User(nickname, email);
+        return new User(nickname, email, profileImageUrl);
     }
 }
