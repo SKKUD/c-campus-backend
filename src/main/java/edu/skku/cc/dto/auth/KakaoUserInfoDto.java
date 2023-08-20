@@ -12,10 +12,10 @@ import java.util.UUID;
 @NoArgsConstructor
 public class KakaoUserInfoDto {
     private String nickname;
-    private String email;
+    private Long kakaoId;
     private String profileImageUrl;
 
     public User toEntity() {
-        return new User(nickname, email, profileImageUrl);
+        return new User(nickname, kakaoId, profileImageUrl);
     }
 }

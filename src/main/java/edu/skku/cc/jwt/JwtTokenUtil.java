@@ -67,38 +67,6 @@ public class JwtTokenUtil {
         return new UsernamePasswordAuthenticationToken(userId, token);
     }
 
-    public Authentication getAuthenticationFromKakaoToken(String kakaoToken) {
-        String kakaoUserInfoUri = "https://kapi.kakao.com/v2/user/me";
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + kakaoToken);
-        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
-
-        RestTemplate rt = new RestTemplate();
-        HttpEntity<MultiValueMap<String, String>> httpEntity = new HttpEntity<>(headers);
-
-        try {
-            ResponseEntity<String> response = rt.exchange(kakaoUserInfoUri, HttpMethod.GET, httpEntity, String.class);
-
-            JSONParser jsonParser = new JSONParser();
-            JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
-            JSONObject account = (JSONObject) jsonObject.get("kakao_account");
-            JSONObject profile = (JSONObject) account.get("profile");
-
-            String email = String.valueOf(account.get("email"));
-            User user = userRepository.findByEmail(email);
-            if (user == null) {
-                throw new Exception("No such user");
-            }
-
-            Authentication authentication = new UsernamePasswordAuthenticationToken(email, user.getId());
-            log.info("authentication: {}", authentication.getPrincipal());
-            return authentication;
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
     public boolean validateToken(String token) {
         try {
             Claims claims = Jwts

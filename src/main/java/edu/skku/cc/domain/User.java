@@ -20,7 +20,7 @@ public class User extends BaseTimeEntity {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String email;
+    private Long kakaoId;
 
     @Column(nullable = false)
     private String profileImageUuid;
@@ -36,9 +36,9 @@ public class User extends BaseTimeEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     private List<Photo> photos;
 
-    public User(String name, String email, String profileImageUrl) {
+    public User(String name, Long kakaoId, String profileImageUrl) {
         this.name = name;
-        this.email = email;
+        this.kakaoId = kakaoId;
         this.profileImageUrl = profileImageUrl;
     }
 
