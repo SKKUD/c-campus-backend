@@ -152,6 +152,7 @@ public class MessageService {
         }
     }
 
+    @Transactional
     public void solveMessageQuiz(Long userId, Long messageId, String answer) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
@@ -160,7 +161,6 @@ public class MessageService {
             throw new CustomException(ErrorType.INVALID_SOLVE_REQUEST_EXCEPTION);
         }
         if (messageQuiz.getAnswer().equals(answer)) {
-            // 이게 맞는지 아니면 messageQuiz.solveQuiz()로 해야하는지 모르겠음
             message.solveQuiz();
         } else {
             throw new CustomException(ErrorType.WRONG_ANSWER_EXCEPTION);
