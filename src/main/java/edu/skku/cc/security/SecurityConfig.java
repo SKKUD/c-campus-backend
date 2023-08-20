@@ -45,7 +45,7 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session ->
                         session
-                                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
                 .logout(AbstractHttpConfigurer::disable
                 )
