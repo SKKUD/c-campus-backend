@@ -121,7 +121,7 @@ public class KakaoAuthService {
         KakaoUserInfoDto kakaoUserInfoDto = getKakaoUserInfo(kakaoTokenDto);
         User user = kakaoUserInfoDto.toEntity();
 
-        User findUser = userRepository.findByEmail(user.getEmail());
+        User findUser = userRepository.findByKakaoId(user.getKakaoId());
         if (findUser == null) {
             log.info("create new image");
             UUID profileImageUuid = saveImageInS3(kakaoUserInfoDto.getProfileImageUrl());
@@ -192,20 +192,20 @@ public class KakaoAuthService {
         );
 
         JSONObject jsonObject = (JSONObject) jsonParser.parse(response.getBody());
+        Long kakaoId = (Long) jsonObject.get("id");
         JSONObject account = (JSONObject) jsonObject.get("kakao_account");
         JSONObject profile = (JSONObject) account.get("profile");
 
         log.info("profile {}", profile);
+        log.info("kakaoId {}", kakaoId);
 
         String nickname = String.valueOf(profile.get("nickname"));
         String profileImageUrl = String.valueOf(profile.get("profile_image_url"));
-        String email = String.valueOf(account.get("email"));
 
         log.info("nickname {}", nickname);
-        log.info("email {}", email);
         log.info("profile_image_url {}", profileImageUrl);
 
-        return new KakaoUserInfoDto(nickname, email, profileImageUrl);
+        return new KakaoUserInfoDto(nickname, kakaoId, profileImageUrl);
     }
 
     public String getNewAccessToken(String refreshToken) throws Exception{
