@@ -51,7 +51,6 @@ public class MessageController {
         if (!(authentication!= null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
             throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         }
-        messageService.updateMessagePublic(userId, messageId);
         return ApiResponse.success(SuccessType.UPDATE_USER_MESSAGE_PUBLIC_SUCCESS, messageService.updateMessagePublic(userId, messageId));
     }
 
