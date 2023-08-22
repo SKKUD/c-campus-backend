@@ -57,8 +57,8 @@ public class KakaoAuthController {
     @PostMapping("/oauth2/kakao/logout")
     public @ResponseBody ResponseEntity kakaoLogout(HttpServletRequest request, HttpServletResponse response) {
 //        ResponseEntity re = kakaoAuthService.kakaoLogout();
-        Cookie accessTokenCookie = new Cookie("accessToken", " ");
-        Cookie refreshTokenCookie = new Cookie("refreshToken", " ");
+        Cookie accessTokenCookie = new Cookie("accessToken", "");
+        Cookie refreshTokenCookie = new Cookie("refreshToken", "");
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setMaxAge(0);
         accessTokenCookie.setPath("/");
