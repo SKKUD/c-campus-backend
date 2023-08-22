@@ -302,7 +302,7 @@ public class MessageService {
         List<Photo> photoList = user.getPhotos();
 
         return photoList.stream()
-                .filter(photo -> (photo.getMessage().getQuiz() == null || photo.getMessage().getQuiz().getIsSolved()))
+                .filter(photo -> (photo.getMessage() == null || photo.getMessage().getQuiz() == null || photo.getMessage().getQuiz().getIsSolved()))
                 .map(photo -> getUrl(photo.getImageUuid()))
                 .toList();
     }
