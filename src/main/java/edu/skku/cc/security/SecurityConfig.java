@@ -77,7 +77,8 @@ public class SecurityConfig {
                 "*"
         ));
         corsConfiguration.setAllowedOrigins(List.of(
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "https://congcampus.com"
         ));
         corsConfiguration.setExposedHeaders(List.of(
                 "*"

@@ -70,7 +70,7 @@ public class KakaoAuthService {
     public ResponseEntity<String> kakaoLogout() {
         RestTemplate rt = new RestTemplate();
 
-        String logoutRedirectUrl = "http://localhost:3000";
+        String logoutRedirectUrl = "https://congcampus.com";
         String kakaoLogoutUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + CLIENT_ID + "&logout_redirect_uri=" + logoutRedirectUrl;
 
         ResponseEntity<String> responseEntity = rt.getForEntity(kakaoLogoutUrl, String.class);
@@ -225,7 +225,7 @@ public class KakaoAuthService {
         String refreshToken = jwtTokenUtil.createRefreshToken();
         log.info("userId {}", userId);
         log.info("refreshToken {}", refreshToken);
-        redisUtil.saveRefreshToken(refreshToken, userId, jwtTokenUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
+//        redisUtil.saveRefreshToken(refreshToken, userId, jwtTokenUtil.getRefreshTokenExpireTime(), TimeUnit.MILLISECONDS);
         return new KakaoLoginSuccessDto(user.getId(), accessToken, refreshToken);
     }
 }
