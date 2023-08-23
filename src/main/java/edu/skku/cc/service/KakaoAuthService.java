@@ -154,22 +154,22 @@ public class KakaoAuthService {
     }
     private UUID saveImageInS3(String profileImageUrl) {
         try {
-        URL url = new URL(profileImageUrl);
-        InputStream inputStream = url.openStream();
-        byte[] imageData = inputStream.readAllBytes();
-        inputStream.close();
+            URL url = new URL(profileImageUrl);
+            InputStream inputStream = url.openStream();
+            byte[] imageData = inputStream.readAllBytes();
+            inputStream.close();
 
-        log.info("imageData {}", imageData);
+            log.info("imageData {}", imageData);
 
-        UUID profileImageUuid = UUID.randomUUID();
+            UUID profileImageUuid = UUID.randomUUID();
 
-        PutObjectRequest putObjectRequest = PutObjectRequest.builder()
-                .bucket(BUCKET_NAME)
-                .key(profileImageUuid.toString())
-                .build();
-        s3Client.putObject(putObjectRequest, RequestBody.fromByteBuffer(ByteBuffer.wrap(imageData)));
+            PutObjectRequest putObjectRequest = PutObjectRequest.builder()
+                    .bucket(BUCKET_NAME)
+                    .key(profileImageUuid.toString())
+                    .build();
+            s3Client.putObject(putObjectRequest, RequestBody.fromByteBuffer(ByteBuffer.wrap(imageData)));
 
-        return profileImageUuid;
+            return profileImageUuid;
         } catch(Exception e) {
             e.printStackTrace();
             return null;
