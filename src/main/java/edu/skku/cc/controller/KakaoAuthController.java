@@ -26,7 +26,7 @@ import java.util.Collection;
 public class KakaoAuthController {
 
     private final KakaoAuthService kakaoAuthService;
-    private String authRedirectUrl = "http://localhost:3000";
+    private String authRedirectUrl = "https://congcampus.com";
     private final int accessTokenCookieMaxAge = 60 * 30; // 30 mins
     private final int refreshTokenCookieMaxAge = 60 * 60 * 24 * 7; // 7 days
 
@@ -40,12 +40,17 @@ public class KakaoAuthController {
         accessTokenCookie.setHttpOnly(true);
         accessTokenCookie.setMaxAge(accessTokenCookieMaxAge); // Cookie 1 expires after 1 hour
         accessTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
+
         refreshTokenCookie.setHttpOnly(true);
         refreshTokenCookie.setMaxAge(refreshTokenCookieMaxAge); // Cookie 1 expires after 1 hour
         refreshTokenCookie.setPath("/");    // Cookie 1 is accessible to all paths
 
         response.addCookie(accessTokenCookie);
         response.addCookie(refreshTokenCookie);
+
+        addSameSite(response, "None");
+
+        log.info("access token created");
 
         response.addHeader("Location", authRedirectUrl + "/" + kakaoLoginSuccessDto.getUserId());
 
@@ -57,16 +62,30 @@ public class KakaoAuthController {
     @PostMapping("/oauth2/kakao/logout")
     public @ResponseBody ResponseEntity kakaoLogout(HttpServletRequest request, HttpServletResponse response) {
 //        ResponseEntity re = kakaoAuthService.kakaoLogout();
-        Cookie accessTokenCookie = new Cookie("accessToken", "");
-        Cookie refreshTokenCookie = new Cookie("refreshToken", "");
-        accessTokenCookie.setHttpOnly(true);
-        accessTokenCookie.setMaxAge(0);
-        accessTokenCookie.setPath("/");
-        refreshTokenCookie.setHttpOnly(true);
-        refreshTokenCookie.setMaxAge(0);
-        refreshTokenCookie.setPath("/");
-        response.addCookie(accessTokenCookie);
-        response.addCookie(refreshTokenCookie);
+//        Cookie accessTokenCookie = new Cookie("accessToken", "");
+        log.info("[LOGOUT]");
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            log.info("cookie exists");
+            for (Cookie cookie : cookies) {
+                log.info("cookie {}", cookie.getName());
+                if (cookie.getName().equals("accessToken")) {
+                    log.info("[Access token deletion]");
+                    cookie.setMaxAge(0);
+                    cookie.setPath("/");
+                    response.addCookie(cookie);
+                }
+            }
+        }
+//        Cookie refreshTokenCookie = new Cookie("refreshToken", "");
+//        accessTokenCookie.setMaxAge(0);
+//        accessTokenCookie.setDomain("localhost");
+//        accessTokenCookie.setPath("/");
+//        refreshTokenCookie.setMaxAge(0);
+//        accessTokenCookie.setDomain("localhost");
+//        refreshTokenCookie.setPath("/");
+//        response.addCookie(accessTokenCookie);
+//        response.addCookie(refreshTokenCookie);
 //        response.addHeader("Location", authRedirectUrl);
         ResponseEntity responseEntity = ResponseEntity.status(HttpStatusCode.OK)
                 .body(new LogoutResponseDto("로그아웃 되었습니다."));
