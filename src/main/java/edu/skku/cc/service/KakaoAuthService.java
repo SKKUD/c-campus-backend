@@ -2,7 +2,7 @@ package edu.skku.cc.service;
 
 import edu.skku.cc.domain.User;
 import edu.skku.cc.dto.auth.KakaoUserInfoDto;
-import edu.skku.cc.dto.jwt.KakaoLoginSuccessDto;
+import edu.skku.cc.dto.auth.KakaoLoginSuccessDto;
 import edu.skku.cc.jwt.JwtTokenUtil;
 import edu.skku.cc.redis.RedisUtil;
 import edu.skku.cc.repository.UserRepository;

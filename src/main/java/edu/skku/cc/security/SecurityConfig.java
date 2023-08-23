@@ -36,9 +36,7 @@ public class SecurityConfig {
                         ))
                 .httpBasic(AbstractHttpConfigurer::disable
                 )
-                .formLogin(login ->
-                        login
-                                .disable())
+                .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
                                 .anyRequest().permitAll()

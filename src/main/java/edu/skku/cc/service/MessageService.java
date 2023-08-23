@@ -49,7 +49,7 @@ public class MessageService {
      * Get all messages that user pulled
      * Order by pulledAt DESC
      */
-    public List<MessageResponseDto> getUserPulledMessageList(Long userId) {
+    public List<MessageResponseDto> getUserPulledMessageList(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
         List<Message> messageList = user.getMessages();
@@ -64,7 +64,7 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
 
-    public List<MessageResponseDto> getUserPublicPulledMessageList(Long userId) {
+    public List<MessageResponseDto> getUserPublicPulledMessageList(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
         List<Message> messageList = user.getMessages();
@@ -79,7 +79,7 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
 
-    public MessageResponseDto getSingleUserMessage(Long userId, Long messageId) {
+    public MessageResponseDto getSingleUserMessage(UUID userId, Long messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
         // open 여부 체크
@@ -92,7 +92,7 @@ public class MessageService {
         return dto;
     }
 
-    public MessageResponseDto getSingleUserPublicMessage(Long userId, Long messageId) {
+    public MessageResponseDto getSingleUserPublicMessage(UUID userId, Long messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
 
@@ -105,7 +105,7 @@ public class MessageService {
     }
 
     @Transactional
-    public MessagePublicUpdateResponseDto updateMessagePublic(Long userId, Long messageId) {
+    public MessagePublicUpdateResponseDto updateMessagePublic(UUID userId, Long messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
         message.updateIsPublic();
@@ -118,7 +118,7 @@ public class MessageService {
     /**
      * User 메시지 중 pull 되지 않은 것 몇 개인지 체크
      */
-    public Long getRemainMessageCount(Long userId) {
+    public Long getRemainMessageCount(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
         List<Message> messageList = user.getMessages();
@@ -131,7 +131,7 @@ public class MessageService {
      * User 메시지 중 pull 되지 않은 것 5개 단위로 pull
      */
     @Transactional
-    public Integer pullMessage(Long userId) {
+    public Integer pullMessage(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
         List<Message> messageList = user.getMessages();
@@ -153,7 +153,7 @@ public class MessageService {
     }
 
     @Transactional
-    public void solveMessageQuiz(Long userId, Long messageId, String answer) {
+    public void solveMessageQuiz(UUID userId, Long messageId, String answer) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
         Quiz messageQuiz = message.getQuiz();
@@ -168,7 +168,7 @@ public class MessageService {
     }
 
     @Transactional
-    public void deleteMessage(Long userId, Long messageId) {
+    public void deleteMessage(UUID userId, Long messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
 
@@ -190,7 +190,7 @@ public class MessageService {
 
 
     @Transactional
-    public Long createMessage(Long userId, CreateMessageRequestDto request, MultipartFile file) {
+    public Long createMessage(UUID userId, CreateMessageRequestDto request, MultipartFile file) {
         if (file != null && !file.getContentType().startsWith("image")) {
             throw new CustomException(ErrorType.INVALID_FILE_TYPE_EXCEPTION);
         }
@@ -239,7 +239,7 @@ public class MessageService {
     }
 
     @Transactional
-    public String uploadUserPhoto(Long userId, MultipartFile file) {
+    public String uploadUserPhoto(UUID userId, MultipartFile file) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
 
@@ -272,7 +272,7 @@ public class MessageService {
     }
 
     @Transactional
-    public void deletePhoto(Long userId, String imageUuid) {
+    public void deletePhoto(UUID userId, String imageUuid) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
 
@@ -295,7 +295,7 @@ public class MessageService {
     /**
      * Message quiz 없거나 Solved인 Message의 Photo URL List 반환
      */
-    public List<String> getUserPhotoList(Long userId) {
+    public List<String> getUserPhotoList(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_USER_EXCEPTION));
 
