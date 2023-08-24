@@ -79,6 +79,7 @@ public class MessageService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public MessageResponseDto getSingleUserMessage(Long userId, Long messageId) {
         Message message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new CustomException(ErrorType.INVALID_MESSAGE_EXCEPTION));
