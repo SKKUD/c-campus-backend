@@ -1,15 +1,12 @@
 package edu.skku.cc.security;
 
-import edu.skku.cc.domain.Message;
 import edu.skku.cc.domain.User;
-import edu.skku.cc.repository.MessageRepository;
 import edu.skku.cc.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 
 @Component("webSecurity")
@@ -17,6 +14,7 @@ import java.util.Optional;
 @Slf4j
 public class WebSecurity {
     private final UserRepository userRepository;
+
     public boolean checkAuthority(Authentication authentication, Long userId) {
         log.info("userId {}", userId);
         Optional<User> optionalUser = userRepository.findById(userId);
@@ -24,8 +22,7 @@ public class WebSecurity {
             log.info("user id {}", authentication.getCredentials());
             log.info("user authenticated {}", true);
             return true;
-        }
-        else {
+        } else {
             log.info("user authenticated {}", false);
             return false;
         }

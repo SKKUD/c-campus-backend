@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -152,6 +151,7 @@ public class KakaoAuthService {
                 .build();
         s3Client.deleteObject(deleteObjectRequest);
     }
+
     private UUID saveImageInS3(String profileImageUrl) {
         try {
             URL url = new URL(profileImageUrl);
@@ -170,11 +170,12 @@ public class KakaoAuthService {
             s3Client.putObject(putObjectRequest, RequestBody.fromByteBuffer(ByteBuffer.wrap(imageData)));
 
             return profileImageUuid;
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
     }
+
     private KakaoUserInfoDto getKakaoUserInfo(KakaoTokenDto kakaoTokenDto) throws Exception {
         RestTemplate rt = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -208,7 +209,7 @@ public class KakaoAuthService {
         return new KakaoUserInfoDto(nickname, kakaoId, profileImageUrl);
     }
 
-    public String getNewAccessToken(String refreshToken) throws Exception{
+    public String getNewAccessToken(String refreshToken) throws Exception {
         String userId = redisUtil.validateRefreshToken(refreshToken);
         log.info("refreshToken userId {}", userId);
         if (userId == null) {

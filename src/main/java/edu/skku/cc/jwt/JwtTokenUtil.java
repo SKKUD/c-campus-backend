@@ -1,30 +1,17 @@
 package edu.skku.cc.jwt;
 
-import edu.skku.cc.domain.User;
 import edu.skku.cc.enums.JwtExpirationTime;
 import edu.skku.cc.repository.UserRepository;
 import io.jsonwebtoken.*;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Date;
-import java.util.HashMap;
 
 @Component
 @Slf4j
@@ -35,6 +22,7 @@ public class JwtTokenUtil {
     private final long REFRESH_TOKEN_EXPIRE_TIME = JwtExpirationTime.REFRESH_TOKEN_EXPIRATION_TIME.getExpirationTime();
     @Value("${jwt.secret}")
     private String SECRET_KEY;
+
     public String createAccessToken(String subject) {
         return Jwts.builder()
                 .setSubject(subject)

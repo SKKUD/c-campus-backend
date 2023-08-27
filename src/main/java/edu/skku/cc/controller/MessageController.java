@@ -11,7 +11,6 @@ import edu.skku.cc.exception.SuccessType;
 import edu.skku.cc.service.MessageService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,7 +25,7 @@ public class MessageController {
 
     @GetMapping("/users/{userId}/messages/pulled")
     public ApiResponse<List<MessageResponseDto>> getUserPulledMessageList(@PathVariable Long userId, Authentication authentication) {
-        if (authentication!= null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId))) {
+        if (authentication != null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId))) {
             // 수신자 본인 -> 본인의 모든 메시지 조회
             return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ALL_SUCCESS, messageService.getUserPulledMessageList(userId));
         } else {
@@ -37,7 +36,7 @@ public class MessageController {
 
     @GetMapping("/users/{userId}/messages/{messageId}")
     public ApiResponse<MessageResponseDto> getSingleUserMessage(@PathVariable Long userId, @PathVariable Long messageId, Authentication authentication) {
-        if (authentication!= null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId))) {
+        if (authentication != null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId))) {
             // 수신자
             return ApiResponse.success(SuccessType.GET_USER_MESSAGE_ONE_SUCCESS, messageService.getSingleUserMessage(userId, messageId));
         } else {
@@ -48,7 +47,7 @@ public class MessageController {
 
     @PatchMapping("/users/{userId}/messages/{messageId}")
     public ApiResponse<MessagePublicUpdateResponseDto> updateMessagePublic(@PathVariable Long userId, @PathVariable Long messageId, Authentication authentication) {
-        if (!(authentication!= null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
+        if (!(authentication != null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
             throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         }
         return ApiResponse.success(SuccessType.UPDATE_USER_MESSAGE_PUBLIC_SUCCESS, messageService.updateMessagePublic(userId, messageId));
@@ -56,7 +55,7 @@ public class MessageController {
 
     @GetMapping("/users/{userId}/message/remain-count")
     public ApiResponse<Long> getRemainMessageCount(@PathVariable Long userId, Authentication authentication) {
-        if (!(authentication!= null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
+        if (!(authentication != null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
             throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         }
         return ApiResponse.success(SuccessType.GET_USER_REMAIN_MESSAGE_COUNT_SUCCESS, messageService.getRemainMessageCount(userId));
@@ -65,7 +64,7 @@ public class MessageController {
 
     @GetMapping("/users/{userId}/messages/unpulled")
     public ApiResponse<Integer> getUserUnpulledMessageList(@PathVariable Long userId, Authentication authentication) {
-        if (!(authentication!= null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
+        if (!(authentication != null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
             throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         }
         return ApiResponse.success(SuccessType.PULL_USER_MESSAGE_SUCCESS, messageService.pullMessage(userId));
@@ -79,7 +78,7 @@ public class MessageController {
 
     @PostMapping("/users/{userId}/messages/{messageId}/quiz")
     public ApiResponse solveQuiz(@PathVariable Long userId, @PathVariable Long messageId, @RequestBody @Valid MessageSolveQuizRequestDto request, Authentication authentication) {
-        if (!(authentication!= null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
+        if (!(authentication != null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
             throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         }
         messageService.solveMessageQuiz(userId, messageId, request.getAnswer());
@@ -88,7 +87,7 @@ public class MessageController {
 
     @DeleteMapping("/users/{userId}/messages/{messageId}")
     public ApiResponse deleteMessage(@PathVariable Long userId, @PathVariable Long messageId, Authentication authentication) {
-        if (!(authentication!= null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
+        if (!(authentication != null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
             throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         }
         messageService.deleteMessage(userId, messageId);
@@ -97,7 +96,7 @@ public class MessageController {
 
     @GetMapping("/users/{userId}/photos")
     public ApiResponse<List<String>> getUserPhotoList(@PathVariable Long userId, Authentication authentication) {
-        if (!(authentication!= null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
+        if (!(authentication != null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
             throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         }
         return ApiResponse.success(SuccessType.GET_USER_IMAGE_ALL_SUCCESS, messageService.getUserPhotoList(userId));
@@ -110,7 +109,7 @@ public class MessageController {
 
     @DeleteMapping("/users/{userId}/photos/{imageUuid}")
     public ApiResponse deleteUserPhoto(@PathVariable Long userId, @PathVariable String imageUuid, Authentication authentication) {
-        if (!(authentication!= null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
+        if (!(authentication != null && String.valueOf(authentication.getPrincipal()).equals(String.valueOf(userId)))) {
             throw new CustomException(ErrorType.UNAUTHORIZED_USER_EXCEPTION);
         }
         messageService.deletePhoto(userId, imageUuid);
