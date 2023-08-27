@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,7 @@ import java.util.Collection;
 public class KakaoAuthController {
 
     private final KakaoAuthService kakaoAuthService;
+    @Value("${frontend-domain.url}")
     private String authRedirectUrl = "https://congcampus.com";
     private final int accessTokenCookieMaxAge = 60 * 30; // 30 mins
     private final int refreshTokenCookieMaxAge = 60 * 60 * 24 * 7; // 7 days
