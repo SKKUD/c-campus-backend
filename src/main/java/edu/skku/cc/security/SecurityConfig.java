@@ -47,8 +47,13 @@ public class SecurityConfig {
                         session
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .logout(AbstractHttpConfigurer::disable
-                )
+//                .logout(
+//                        l -> l.logoutUrl("oauth2/kakao/logout")
+//                                .logoutSuccessUrl("https://congcampus.com")
+//                                .deleteCookies("accessToken")
+//                                .deleteCookies("refreshToken")
+//                                .permitAll()
+//                )
                 .exceptionHandling(exception ->
                         exception.
                                 authenticationEntryPoint(customAuthenticationEntryPoint)
@@ -83,6 +88,8 @@ public class SecurityConfig {
         corsConfiguration.setExposedHeaders(List.of(
                 "*"
         ));
+
+        corsConfiguration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
