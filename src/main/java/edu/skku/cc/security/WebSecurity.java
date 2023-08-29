@@ -8,14 +8,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Component("webSecurity")
 @RequiredArgsConstructor
 @Slf4j
 public class WebSecurity {
     private final UserRepository userRepository;
-
-    public boolean checkAuthority(Authentication authentication, Long userId) {
+    public boolean checkAuthority(Authentication authentication, UUID userId) {
         log.info("userId {}", userId);
         Optional<User> optionalUser = userRepository.findById(userId);
         if (optionalUser.isPresent() && optionalUser.get().getId() == userId) {

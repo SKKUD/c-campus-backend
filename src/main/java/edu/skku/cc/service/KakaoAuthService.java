@@ -1,8 +1,8 @@
 package edu.skku.cc.service;
 
 import edu.skku.cc.domain.User;
+import edu.skku.cc.dto.auth.KakaoLoginSuccessDto;
 import edu.skku.cc.dto.auth.KakaoUserInfoDto;
-import edu.skku.cc.dto.jwt.KakaoLoginSuccessDto;
 import edu.skku.cc.jwt.JwtTokenUtil;
 import edu.skku.cc.redis.RedisUtil;
 import edu.skku.cc.repository.UserRepository;
@@ -53,6 +53,10 @@ public class KakaoAuthService {
     private String CLIENT_SECRET;
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String REDIRECT_URI;
+
+    @Value("${frontend-domain.url}")
+    private String FRONTEND_URL;
+
     @Value("${aws.s3.bucket}")
     private String BUCKET_NAME;
 
@@ -69,8 +73,7 @@ public class KakaoAuthService {
     public ResponseEntity<String> kakaoLogout() {
         RestTemplate rt = new RestTemplate();
 
-        String logoutRedirectUrl = "https://congcampus.com";
-        String kakaoLogoutUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + CLIENT_ID + "&logout_redirect_uri=" + logoutRedirectUrl;
+        String kakaoLogoutUrl = "https://kauth.kakao.com/oauth/logout?client_id=" + CLIENT_ID + "&logout_redirect_uri=" + FRONTEND_URL;
 
         ResponseEntity<String> responseEntity = rt.getForEntity(kakaoLogoutUrl, String.class);
         return responseEntity;

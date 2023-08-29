@@ -34,17 +34,13 @@ public class KakaoAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        String authorizationHeaderValue = request.getHeader("Authorization");
+        String bearerToken = null;
         String accessToken = null;
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                System.out.println(cookie.getName());
-                if (cookie.getName().equals("accessToken")) {
-                    accessToken = cookie.getValue();
-                }
-            }
-        } else {
-            log.info("There is no cookie");
+        log.info("authorizationHeaderValue {}", authorizationHeaderValue);
+        if (authorizationHeaderValue != null) {
+            bearerToken = authorizationHeaderValue;
+            accessToken = parseBearerToken(bearerToken);
         }
 
         log.info("accessToken value: {}", accessToken);

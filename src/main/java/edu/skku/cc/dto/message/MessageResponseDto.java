@@ -15,7 +15,7 @@ import java.util.UUID;
 public class MessageResponseDto {
 
     private Long messageId; // 메시지 id
-    private Long userId;
+    private UUID userId;
     private String category;
     private String content;
     private String author;
