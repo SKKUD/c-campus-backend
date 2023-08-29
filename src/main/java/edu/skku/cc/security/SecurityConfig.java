@@ -25,6 +25,7 @@ public class SecurityConfig {
 
     private final KakaoAuthenticationFilter kakaoAuthenticationFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAuthorizationManager customAuthorizationManager;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -36,17 +37,25 @@ public class SecurityConfig {
                         ))
                 .httpBasic(AbstractHttpConfigurer::disable
                 )
-                .formLogin(AbstractHttpConfigurer::disable)
+                .formLogin(login ->
+                        login
+                                .disable())
                 .authorizeHttpRequests(authorizeRequests ->
-                        authorizeRequests
-                                .anyRequest().permitAll()
+                                authorizeRequests
+//                                .requestMatchers("/oauth2/kakao/logout").access(customAuthorizationManager)
+                                        .anyRequest().permitAll()
                 )
                 .sessionManagement(session ->
                         session
                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .logout(AbstractHttpConfigurer::disable
-                )
+//                .logout(
+//                        l -> l.logoutUrl("oauth2/kakao/logout")
+//                                .logoutSuccessUrl("https://congcampus.com")
+//                                .deleteCookies("accessToken")
+//                                .deleteCookies("refreshToken")
+//                                .permitAll()
+//                )
                 .exceptionHandling(exception ->
                         exception.
                                 authenticationEntryPoint(customAuthenticationEntryPoint)
@@ -81,6 +90,8 @@ public class SecurityConfig {
         corsConfiguration.setExposedHeaders(List.of(
                 "*"
         ));
+
+        corsConfiguration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
