@@ -1,6 +1,5 @@
 package edu.skku.cc.jwt;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.skku.cc.exception.CustomException;
 import jakarta.servlet.FilterChain;
@@ -21,7 +20,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collection;
 import java.util.LinkedHashMap;
 
 //expiration
@@ -32,7 +30,7 @@ import java.util.LinkedHashMap;
 @RequiredArgsConstructor
 public class KakaoAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenUtil jwtTokenUtil;
-    private String TOKEN_VALIDATION_URL = "https://kapi.kakao.com/v1/user/access_token_info";
+    private final String TOKEN_VALIDATION_URL = "https://kapi.kakao.com/v1/user/access_token_info";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -51,8 +49,7 @@ public class KakaoAuthenticationFilter extends OncePerRequestFilter {
             Authentication authentication = jwtTokenUtil.getAuthenticationFromToken(accessToken);
             SecurityContextHolder.getContext().setAuthentication(authentication);
             log.info("{} saved", authentication.getPrincipal());
-        }
-        else {
+        } else {
             SecurityContextHolder.clearContext();
         }
         try {
@@ -83,6 +80,7 @@ public class KakaoAuthenticationFilter extends OncePerRequestFilter {
             return null;
         }
     }
+
     private ResponseEntity<String> getKakaoTokenValidationResponse(String kakaoAccessToken) {
         RestTemplate rt = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
@@ -104,6 +102,7 @@ public class KakaoAuthenticationFilter extends OncePerRequestFilter {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
+
     private String parseBearerToken(String bearerToken) {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
