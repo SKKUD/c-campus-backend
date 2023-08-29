@@ -25,6 +25,7 @@ public class SecurityConfig {
 
     private final KakaoAuthenticationFilter kakaoAuthenticationFilter;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final CustomAuthorizationManager customAuthorizationManager;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -41,6 +42,7 @@ public class SecurityConfig {
                                 .disable())
                 .authorizeHttpRequests(authorizeRequests ->
                         authorizeRequests
+//                                .requestMatchers("/oauth2/kakao/logout").access(customAuthorizationManager)
                                 .anyRequest().permitAll()
                 )
                 .sessionManagement(session ->
