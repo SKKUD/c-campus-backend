@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +31,8 @@ public class KakaoAuthController {
     private final KakaoAuthService kakaoAuthService;
     private final int accessTokenCookieMaxAge = 60 * 30; // 30 mins
     private final int refreshTokenCookieMaxAge = 60 * 60 * 24 * 7; // 7 days
-    private final String authRedirectUrl = "https://congcampus.com";
+    @Value("${frontend-domain.url}")
+    private String authRedirectUrl;
 
     @GetMapping("/oauth2/callback/kakao")
     public @ResponseBody ResponseEntity kakaoCallback(String code, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -61,7 +63,7 @@ public class KakaoAuthController {
         return responseEntity;
     }
 
-    @PostMapping("/oauth2/kakao/logout")
+    @GetMapping("/oauth2/kakao/logout")
     public @ResponseBody ResponseEntity kakaoLogout(HttpServletRequest request, HttpServletResponse response) {
 //        ResponseEntity re = kakaoAuthService.kakaoLogout();
 //        Cookie accessTokenCookie = new Cookie("accessToken", "");
