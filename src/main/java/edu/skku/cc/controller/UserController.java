@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import software.amazon.awssdk.http.HttpStatusCode;
 
+import java.util.UUID;
+
 @Controller
 @RequiredArgsConstructor
 @Slf4j
@@ -21,7 +23,7 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping("/users/{userId}")
-    public ResponseEntity<UserResponseDto> getUserInfo(@PathVariable Long userId) {
+    public ResponseEntity<UserResponseDto> getUserInfo(@PathVariable UUID userId) {
         log.info("userId {}", userId);
         UserDto userDto = userService.getUser(userId);
         if (userDto != null) {

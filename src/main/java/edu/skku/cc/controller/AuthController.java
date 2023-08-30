@@ -13,6 +13,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import software.amazon.awssdk.http.HttpStatusCode;
 
+import java.util.UUID;
+
 @Controller
 @RequiredArgsConstructor
 @Slf4j
@@ -36,7 +38,7 @@ public class AuthController {
         if (StringUtils.hasText(accessToken) && jwtTokenUtil.validateToken(accessToken)) {
             String stringUserId = String.valueOf(authentication.getPrincipal());
             try {
-                return ResponseEntity.status(HttpStatusCode.OK).body(new AuthenticationResponseDto(Long.parseLong(stringUserId)));
+                return ResponseEntity.status(HttpStatusCode.OK).body(new AuthenticationResponseDto(UUID.fromString(stringUserId)));
             } catch (NumberFormatException e) {
                 return ResponseEntity.status(HttpStatusCode.OK).body(new AuthenticationResponseDto(null));
             }
