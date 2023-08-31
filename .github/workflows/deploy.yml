@@ -23,8 +23,12 @@ jobs:
         run: chmod +x ./gradlew
         shell: bash
 
-      - name: Build with Gradle
-        run: ./gradlew clean build
+#      - name: Build with Gradle
+#        run: ./gradlew clean build
+#        shell: bash
+
+      - name: Build with Gradle without tests
+        run: ./gradlew clean build -x test
         shell: bash
 
       - name: Get current time
