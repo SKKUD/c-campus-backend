@@ -294,7 +294,9 @@ public class MessageService {
     }
 
     /**
-     * Message quiz 없거나 Solved인 Message의 Photo URL List 반환
+     * 1) Message 없는 경우
+     * 2) Message pull 되었고 quiz 없는 경우
+     * 3) Message pull 되었고 quiz 푼 경우
      */
     public List<String> getUserPhotoList(UUID userId) {
         User user = userRepository.findById(userId)
@@ -303,8 +305,10 @@ public class MessageService {
         List<Photo> photoList = user.getPhotos();
 
         return photoList.stream()
-                .filter(photo -> (photo.getMessage() == null || photo.getMessage().getQuiz() == null || photo.getMessage().getQuiz().getIsSolved()))
-                .map(photo -> getUrl(photo.getImageUuid()))
+
+                .filter(photo -> (photo.getMessage() == null ||
+                        (photo.getMessage().getIsPulled() && (photo.getMessage().getQuiz() == null || photo.getMessage().getQuiz().getIsSolved()))))
+                .map(eachPhoto -> getUrl(eachPhoto.getImageUuid()))
                 .toList();
     }
 
