@@ -31,8 +31,7 @@ public class KakaoAuthController {
     private final KakaoAuthService kakaoAuthService;
     private final int accessTokenCookieMaxAge = 60 * 30; // 30 mins
     private final int refreshTokenCookieMaxAge = 60 * 60 * 24 * 7; // 7 days
-    @Value("${frontend-domain.url}")
-    private String authRedirectUrl;
+    private String authRedirectUrl = "https://congcampus.com";
 
     @GetMapping("/oauth2/callback/kakao")
     public @ResponseBody ResponseEntity kakaoCallback(String code, HttpServletRequest request, HttpServletResponse response) throws Exception {

@@ -53,8 +53,6 @@ public class KakaoAuthService {
     private String CLIENT_SECRET;
     @Value("${spring.security.oauth2.client.registration.kakao.redirect-uri}")
     private String REDIRECT_URI;
-    @Value("${frontend-domain.url}")
-    private String FRONTEND_DOMAIN;
     @Value("${aws.s3.bucket}")
     private String BUCKET_NAME;
 
